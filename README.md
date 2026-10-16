@@ -4,27 +4,11 @@ An e-ink dashboard for Kindle and Mac. A large clock, weather, recent Codex ques
 
 [中文说明](docs/README.zh-CN.md) · [Setup](docs/SETUP.md) · [Protocol](docs/PROTOCOL.md) · [License](LICENSE)
 
-## Downloads
+## Demo
 
-Choose your preferred language:
+![English panel with sample conversations](docs/images/panel-en.png)
 
-- [中文版](https://github.com/ff-fdt/kindle-desk-dashboard/releases/latest/download/kindle-desk-zh.zip)
-- [English](https://github.com/ff-fdt/kindle-desk-dashboard/releases/latest/download/kindle-desk-en.zip)
-
-Each source package comes with its interface language configured. Follow [Setup](docs/SETUP.md) to run it.
-
-## Interface
-
-- Portrait 1236 × 1648 layout designed for e-ink.
-- Time, date and local weather.
-- Codex questions and replies with **In progress** and **Completed** turn states.
-- Three latest conversations on one page, with questions, replies and completion status.
-- Swipe down for Kindle's native brightness and warm-light controls.
-- Mac CPU, memory and storage, plus Kindle battery level.
-
-![English panel](docs/images/panel-en.png)
-
-## Run the Mac preview
+## Quick start
 
 Requires Python 3.10+.
 
@@ -37,9 +21,28 @@ python3 -m venv .venv
 
 Open **http://127.0.0.1:8791/panel/**.
 
-Copy `config/example.json` to `config/local.json` to configure the city, coordinates, timezone and refresh intervals. `KINDLE_DESK_STATE_DIR` selects the runtime state directory; `KINDLE_DESK_CHROMIUM` selects a Chromium executable. The defaults use London weather and a 15-second refresh.
+Copy `config/example.json` to `config/local.json` to configure the city, coordinates and timezone. `KINDLE_DESK_STATE_DIR` selects the runtime state directory; `KINDLE_DESK_CHROMIUM` selects a Chromium executable. The defaults use London weather. The panel updates at the start of each minute; weather is fetched every 15 minutes and on manual refresh.
 
 The device setup uses a jailbroken Paperwhite 5 Signature Edition, firmware 5.18.3, and an Apple Silicon Mac. Build and pairing instructions are in [Setup](docs/SETUP.md).
+
+## Downloads
+
+Choose your preferred language:
+
+- [中文版](https://github.com/ff-fdt/kindle-desk-dashboard/releases/latest/download/kindle-desk-zh.zip)
+- [English](https://github.com/ff-fdt/kindle-desk-dashboard/releases/latest/download/kindle-desk-en.zip)
+
+Each source package comes with its interface language configured. Follow [Setup](docs/SETUP.md) to run it.
+
+## Features
+
+- Portrait 1236 × 1648 layout designed for e-ink.
+- Time, date and local weather.
+- Three latest Codex conversations on one page, with **In progress** and **Completed** states.
+- Automatic updates at the start of each minute and a manual Refresh button.
+- Power-button and cover sleep; the dashboard and Bluetooth connection resume on wake.
+- Swipe down for Kindle's native brightness and warm-light controls.
+- Mac CPU, memory and storage, plus Kindle battery level.
 
 ## How it works
 
@@ -79,4 +82,4 @@ Renderer/system helpers: [codecube/kindle-mcp-dashboard](https://github.com/code
 
 Project code uses the [MIT license](LICENSE). Third-party notices are in `vendor/`.
 
-The panel refreshes at the start of every minute. Tap **Refresh** for an immediate update.
+See [version history](docs/CHANGELOG.md) and [contributing](docs/CONTRIBUTING.md).

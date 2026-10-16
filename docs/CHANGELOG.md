@@ -1,0 +1,22 @@
+# Version history
+
+## v0.2.6
+- Automatic updates at the start of every minute.
+- A Refresh button fetches current conversations, metrics and weather.
+- Manual updates preserve the next minute-aligned update.
+
+## v0.2.5
+- Sleep using the power button or cover.
+- Wake restores the dashboard and reconnects Bluetooth.
+- Replies end on complete text lines.
+
+## v0.2.4
+- A single page shows the three latest conversations.
+- The dashboard returns to the foreground after native home opens.
+- Native brightness and warm-light controls remain available.
+
+## v0.2.3
+- Dashboard startup continues after USB storage becomes available.
+
+## v0.2.1
+- Chinese and English download editions with the interface language preconfigured.

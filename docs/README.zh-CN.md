@@ -6,18 +6,11 @@
 
 下载包已配置对应语言，按 [安装说明](SETUP.md) 运行即可。
 
-## 界面
+## 演示
 
-- 竖屏 1236 × 1648，面向墨水屏设计。
-- 时间、日期和当地天气。
-- Codex 问题与回复，显示“进行中 / 已完成”状态。
-- 固定显示最新三条对话，包括问题、回复和进行中／已完成状态。
-- 顶部下滑打开 Kindle 原生控制栏，调整亮度和暖光。
-- Mac CPU、内存、磁盘与 Kindle 电量。
+![使用示例对话的中文界面](images/panel-zh.png)
 
-![中文界面](images/panel-zh.png)
-
-## 本机预览
+## 快速开始
 
 ```sh
 python3 -m venv .venv
@@ -28,7 +21,17 @@ python3 -m venv .venv
 
 打开 **http://127.0.0.1:8791/panel/**。
 
-复制 `config/example.json` 为 `config/local.json`，可修改城市、经纬度、时区和刷新频率。默认使用伦敦天气，每 15 秒更新一次面板。
+复制 `config/example.json` 为 `config/local.json`，可修改城市、经纬度和时区。默认使用伦敦天气，面板每分钟整点更新；天气每 15 分钟获取一次，手动刷新也会获取新天气。
+
+## 功能
+
+- 竖屏 1236 × 1648，面向墨水屏设计。
+- 时间、日期和当地天气。
+- 固定显示最新三条 Codex 对话，包括问题、回复和进行中／已完成状态。
+- 每分钟整点更新，右下角可手动刷新。
+- 电源键或合盖休眠，唤醒后恢复看板并重新连接。
+- 顶部下滑打开 Kindle 原生控制栏，调整亮度和暖光。
+- Mac CPU、内存、磁盘与 Kindle 电量。
 
 ## 运行方式
 
@@ -40,4 +43,4 @@ Mac 读取本机 Codex 对话、天气和资源数据，渲染成灰度图，经
 
 项目采用 [MIT 许可证](../LICENSE)。天气来自 [Open-Meteo](https://open-meteo.com/)（CC BY 4.0）；图标来自 Tabler Icons。其他依赖与声明见 [Credits](../README.md#credits) 和 `vendor/`。
 
-看板每分钟整点自动刷新。点右下角「刷新」可立即获取最新内容。
+[版本变化](CHANGELOG.md) · [参与贡献](CONTRIBUTING.md)
