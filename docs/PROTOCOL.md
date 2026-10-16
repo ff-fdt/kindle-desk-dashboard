@@ -8,10 +8,10 @@ The shared 32-byte binary key is provisioned over USB and never sent over BLE. `
 
 Subscribe to DATA, then `07` streams the pinned payload with CoreBluetooth backpressure. Each notification starts with a uint32-LE offset. The receiver checks order, length, SHA-256, GCM authentication and PNG validity before replacing the last frame. `03 + uint16-LE page` retains a page-read fallback. `04 + 16 ASCII revision bytes + HMAC-SHA256(session_key, preceding bytes)` acknowledges receipt; `06` similarly acknowledges completed GTK/X11 drawing and synchronization.
 
-Device commands use a separate characteristic: 16 ASCII hex sequence bytes, one opcode, one level, then HMAC-SHA256 over those 18 bytes. Opcodes allow brightness, warmth, native mode, dashboard and status only. Values are bounded 0–24. Opcode `08` sends an authenticated execution report; an HTTP queue response is not execution success.
+Device commands use a separate characteristic: 16 ASCII hex sequence bytes, one opcode, one level, then HMAC-SHA256 over those 18 bytes. Opcodes allow brightness, warmth, native mode, dashboard and status only. Values are bounded 0–24. Opcode `08` sends the device execution result; the HTTP response supplies the queue identifier.
 
 Opcode `09` reports telemetry: one opcode byte, uint32-LE counter, five bytes (battery percent, charging, brightness, warmth, mode), then HMAC-SHA256 over the first 10 bytes. Battery is 0–100, charging 0/1, levels 0–24, mode 0/1; 255 denotes unavailable values except mode. The Mac rejects non-monotonic counters within a session.
 
 Opcode `0A` sends a tap: one opcode byte, 16 ASCII hex sequence bytes, uint16-LE x, uint16-LE y, then HMAC-SHA256 over those 21 bytes. Bounds are 1236×1648. The Mac deduplicates events before invoking the same DOM hit testing used by the preview. Native top-edge gestures are handled locally by the GTK viewer.
 
-Protocol bytes above use hexadecimal opcode notation. No arbitrary shell command or executable UI script is accepted over BLE. This protocol is experimental and has not undergone an independent security audit.
+Protocol opcodes above use hexadecimal notation.

@@ -1,38 +1,32 @@
 # Kindle Desk
 
-An interactive, monochrome desk dashboard for a jailbroken Kindle and a Mac. A large clock, weather, recent Codex questions and replies, Mac resource usage, and the Kindle's own battery level — sent over Bluetooth without requiring a shared Wi-Fi network.
+An interactive e-ink dashboard for Kindle and Mac. A large clock, weather, recent Codex questions and replies, Mac resources and Kindle battery level, updated over Bluetooth.
 
 [中文说明](docs/README.zh-CN.md) · [Setup](docs/SETUP.md) · [Protocol](docs/PROTOCOL.md) · [License](LICENSE)
 
 ## Downloads
 
-Choose an edition once when downloading; each archive has its language preconfigured. These are source packages, requiring the setup steps below, not firmware or prebuilt receiver installers.
+Choose your preferred language:
 
-- [中文版 source package](https://github.com/ff-fdt/kindle-desk-dashboard/releases/latest/download/kindle-desk-zh.zip)
-- [English source package](https://github.com/ff-fdt/kindle-desk-dashboard/releases/latest/download/kindle-desk-en.zip)
+- [中文版](https://github.com/ff-fdt/kindle-desk-dashboard/releases/latest/download/kindle-desk-zh.zip)
+- [English](https://github.com/ff-fdt/kindle-desk-dashboard/releases/latest/download/kindle-desk-en.zip)
+
+Each source package comes with its interface language configured. Follow [Setup](docs/SETUP.md) to run it.
 
 ## Interface
 
-- Portrait 1236 × 1648 layout, designed for e-ink.
-- Separate Chinese and English download editions. The Kindle has no language switch; conversation text stays in its original language.
-- Tap a conversation to read its full question and reply; use previous / next and return to the overview.
-- Two conversation-turn states: **In progress** and **Completed**. Completed means the reply ended, not that every project objective succeeded.
-- Native Kindle top-edge quick settings remain available for brightness and warm-light adjustments.
-- CPU, memory, APFS storage and authenticated Kindle battery telemetry. Stale readings are marked.
+- Portrait 1236 × 1648 layout designed for e-ink.
+- Time, date and local weather.
+- Codex questions and replies with **In progress** and **Completed** turn states.
+- Tap a conversation to read the full text, turn pages and return to the overview.
+- Swipe down for Kindle's native brightness and warm-light controls.
+- Mac CPU, memory and storage, plus Kindle battery level.
 
-![English panel with fictional example data](docs/images/panel-en.png)
+![English panel](docs/images/panel-en.png)
 
-The image uses only fictional demonstration conversations. Render either language with `.venv/bin/python scripts/render-demo.py`.
+## Run the Mac preview
 
-## Supported environment and status
-
-Development hardware is a Kindle Paperwhite 5 Signature Edition, firmware 5.18.3, with ARMv7 Linux and a 1236 × 1648 display, plus an Apple Silicon Mac. Other Kindle generations and firmware versions have not been qualified. This project does not provide a jailbreak or flash replacement firmware.
-
-The dashboard runs as an ordinary GTK/X11 application while the native X server, framework and window manager remain running. The boot job starts after `framework_ready` and has no respawn loop. Installation leaves autostart off; qualify manual mode before enabling it. Native quick-settings brightness and repeated swipes have been physically verified with the preceding receiver. New touch forwarding and battery telemetry still require end-to-end physical qualification; cold-boot autostart is not yet qualified. Updating the ad-hoc-signed Mac app can require a new macOS Bluetooth authorization.
-
-## Try the Mac preview
-
-Requires Python 3.10+ and Node is only needed for optional JavaScript syntax checks.
+Requires Python 3.10+.
 
 ```sh
 python3 -m venv .venv
@@ -41,44 +35,46 @@ python3 -m venv .venv
 .venv/bin/python desk.py --port 8791
 ```
 
-Open **http://127.0.0.1:8791/panel/**. The preview works without a Kindle; battery remains unavailable until the receiver reports it. Codex data is read from the current user's local SQLite registry and JSONL logs in read-only mode. No OpenAI API key is required. An unsupported local log format may yield no conversations.
+Open **http://127.0.0.1:8791/panel/**.
 
-Copy `config/example.json` to `config/local.json` to set coordinates, city, timezone, refresh intervals and the installation language (`zh` or `en`). Runtime state defaults to `state/`; set `KINDLE_DESK_STATE_DIR` to keep it elsewhere. Set `KINDLE_DESK_CHROMIUM` to pin a Chromium executable for a service installation. System fonts render locally and are not distributed.
+Copy `config/example.json` to `config/local.json` to configure the city, coordinates, timezone and refresh intervals. `KINDLE_DESK_STATE_DIR` selects the runtime state directory; `KINDLE_DESK_CHROMIUM` selects a Chromium executable. The defaults use London weather and a 15-second refresh.
 
-The macOS BLE app, device builds, USB provisioning and recovery procedures are documented in [Setup](docs/SETUP.md). Device SDK headers, stock libraries and jailbreak utilities must be obtained separately. There are no bundled firmware images or ready-to-flash binaries.
+The device setup uses a jailbroken Paperwhite 5 Signature Edition, firmware 5.18.3, and an Apple Silicon Mac. Build and pairing instructions are in [Setup](docs/SETUP.md).
+
+## How it works
+
+The Mac reads local Codex conversations, collects weather and resource data, and renders the panel as a grayscale PNG. The Kindle receives frames over an authenticated, AES-256-GCM encrypted Bluetooth connection. Touch events travel back to the Mac for page navigation. A GTK/X11 window displays the panel alongside the Kindle's native controls.
+
+The preview runs on `127.0.0.1`. Pairing keys are provisioned over USB. See [Protocol](docs/PROTOCOL.md) and [Data handling](docs/PRIVACY.md) for details.
 
 ## Repository map
 
 | Path | Purpose |
 | --- | --- |
-| `panel/` | Shared HTML/CSS/JS interface for browser and Kindle screenshots |
-| `desk.py`, `conversations.py` | Read-only collectors, loopback API and rendering worker |
-| `panel_render.py`, `mac_metrics.py` | Chromium-to-PNG rendering and local resources |
-| `mac/` | CoreBluetooth peripheral and maintenance UI |
-| `kindle/` | BLE client, native GTK viewer, lifecycle and recovery scripts |
-| `scripts/` | Build and launch entry points |
-| `tests/` | Conversation parsing, control bounds and device lifecycle checks |
-| `vendor/` | Third-party notices and retained upstream helpers |
-| `docs/` | Setup, protocol, privacy and Chinese documentation |
+| `panel/` | Shared HTML/CSS/JS interface |
+| `desk.py`, `conversations.py` | Data collectors and local API |
+| `panel_render.py`, `mac_metrics.py` | Grayscale rendering and Mac resources |
+| `mac/` | Bluetooth peripheral and maintenance UI |
+| `kindle/` | BLE client, GTK viewer and lifecycle scripts |
+| `scripts/` | Build, launch and packaging tools |
+| `tests/` | Collector and device lifecycle tests |
+| `docs/` | Setup, protocol and Chinese documentation |
+| `examples/` | Sample data for preview images |
+| `vendor/` | Upstream helpers and license notices |
 
-## Privacy and transport
-
-The HTTP server binds to `127.0.0.1`, without cross-origin access. Rendering is local. Conversation text is sent only to the paired Kindle through an application-authenticated, AES-256-GCM encrypted BLE session. The shared pairing key is provisioned over USB, never transmitted over BLE. See [Protocol](docs/PROTOCOL.md) and [Privacy](docs/PRIVACY.md).
-
-Do not commit runtime state, real conversation screenshots, books, device backups, SSH material, pairing keys or local configuration. The public repository starts from a reviewed source snapshot and does not contain personal deployment history.
-
-## Checks
+## Development
 
 ```sh
 .venv/bin/python -m pip install pytest
 .venv/bin/python -m pytest -q
 node --check panel/panel.js
+.venv/bin/python scripts/render-demo.py
 ```
 
 ## Credits
 
-Weather data: [Open-Meteo](https://open-meteo.com/), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Attribution is kept here rather than on the panel. Icons: [Tabler Icons](https://github.com/tabler/tabler-icons), MIT, version 3.34.1. See `panel/assets/SOURCE.json` and `vendor/LICENSE.tabler-icons`.
+Weather: [Open-Meteo](https://open-meteo.com/), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Icons: [Tabler Icons](https://github.com/tabler/tabler-icons), MIT, version 3.34.1.
 
-Earlier renderer/system helpers derive from [codecube/kindle-mcp-dashboard](https://github.com/codecube/kindle-mcp-dashboard), MIT, commit `aafc74f035597a1fca8ffd39ce1f4c554e8438c2`. Bluetooth support builds against [Sighery/kindlebt](https://github.com/Sighery/kindlebt), MIT, commit `59e1d8e69a52e3cd58cee6fcc416d1774ad55791`, and [rxi/log.c](https://github.com/rxi/log.c), MIT, commit `f9ea34994bd58ed342d2245cd4110bb5c6790153`. Their notices are retained in `vendor/`. Proprietary device libraries and SDK files are not redistributed.
+Renderer/system helpers: [codecube/kindle-mcp-dashboard](https://github.com/codecube/kindle-mcp-dashboard), MIT, commit `aafc74f035597a1fca8ffd39ce1f4c554e8438c2`. Bluetooth: [Sighery/kindlebt](https://github.com/Sighery/kindlebt), MIT, commit `59e1d8e69a52e3cd58cee6fcc416d1774ad55791`; [rxi/log.c](https://github.com/rxi/log.c), MIT, commit `f9ea34994bd58ed342d2245cd4110bb5c6790153`.
 
-Original project code is available under the MIT license. Third-party material retains its own license. This is an independent project, unaffiliated with Amazon or OpenAI.
+Project code uses the [MIT license](LICENSE). Third-party notices are in `vendor/`.

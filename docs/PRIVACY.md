@@ -1,9 +1,9 @@
 # Data handling
 
-The collector reads the current user's local Codex registry and rollout logs without modifying them. It publishes recent questions, replies and turn states to a loopback-only API and locally rendered PNG. It does not call the OpenAI API or upload conversations to a rendering service.
+The Mac reads the current user's Codex registry and rollout logs, then renders recent questions, replies and turn states locally. The preview API listens on `127.0.0.1`.
 
-Weather requests send the configured coordinates to Open-Meteo. The Mac-to-Kindle transport uses a provisioned shared key, nonce-based authentication and AES-256-GCM payload encryption. The native system Bluetooth pairing flow is separate from this application protocol. Bounded control and telemetry packets are authenticated with the session key.
+Weather requests send the configured coordinates to Open-Meteo. Bluetooth payloads use nonce-based authentication and AES-256-GCM encryption with a key provisioned over USB. Control, touch and telemetry packets use the session key for authentication.
 
-`state/` can contain conversation text, rendered frames, UI preferences and pairing material. Anyone with access to the running local account or the paired Kindle can view these conversations. Keep those files and screenshots out of source control and public issue reports. The collector is coupled to local Codex storage formats; review it before using it with different versions.
+Runtime files live in `state/`: collected conversations, rendered frames, reading position and pairing material. The Git ignore rules keep runtime data and local configuration separate from source files. Demo images use `examples/demo-state.json`.
 
-SSH maintenance is restricted to USB addresses and provisioned keys, with password authentication disabled. No arbitrary shell command is accepted over the BLE control API. Do not expose the HTTP service through a LAN proxy or a public tunnel.
+USB maintenance uses key-authenticated SSH on the device's USB addresses. BLE controls support brightness, warmth, native controls, dashboard return and status.
