@@ -173,11 +173,11 @@ class CodexCollector:
                     if turn['at']:
                         items.append({**turn, 'thread_id': thread_id, 'title': plain(title),
                                       'id': thread_id + '/' + turn['turn_id']})
-            items.sort(key=lambda x: (x['status'] == 'running', x['updated_at'] or x['at']), reverse=True)
+            items.sort(key=lambda x: (x['updated_at'] or x['at']), reverse=True)
             items = items[:limit]
             return {'available': True, 'items': items,
                     'completed': [x for x in items if x['status'] == 'completed'],
                     'active': [x for x in items if x['status'] == 'running'],
-                    'meaning': '状态对应问答回合；已完成表示回复结束，不代表项目验收。'}
+                    'meaning': '最近三条对话的问题、回复与状态。'}
         except (sqlite3.Error, OSError) as exc:
             return {**missing, 'error': type(exc).__name__}

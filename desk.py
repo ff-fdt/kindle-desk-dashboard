@@ -141,48 +141,26 @@ class Desk:
         self.current = None
         self.renderer = None
         self.ready = threading.Event()
-        self.last_event = None
-        self.last_request = None
         self.next_collect = 0
         self.last_state = None
-        try:
-            saved = json.loads((STATE / 'panel-ui.json').read_text())
-            self.panel_ui = saved.get('ui', saved)
-            self.last_event = saved.get('last_event')
-            self.last_request = saved.get('last_request')
-        except (OSError, ValueError):
-            self.panel_ui = {'language': CONFIG.get('language', 'zh')}
+        self.panel_ui = {'language': CONFIG.get('language', 'zh')}
 
     def collect(self, fresh=True):
         if self.renderer is None:
             self.renderer = PanelRenderer(BASE)
         if fresh or self.last_state is None:
             state = {'schema': 2, 'generated_at': int(time.time()), 'timezone': CONFIG['timezone'],
-                     'weather': self.weather.snapshot(), 'codex': self.codex.snapshot(12),
+                     'weather': self.weather.snapshot(), 'codex': self.codex.snapshot(3),
                      'mac': self.metrics.snapshot(), 'kindle': self.metrics.kindle()}
             self.last_state = state
         else:
             state = dict(self.last_state)
-        restore, touch = self.panel_ui, None
-        try:
-            request = json.loads((STATE / 'panel-request.json').read_text())
-            if request['seq'] != self.last_request:
-                restore = request['ui']; self.last_request = request['seq']
-        except (OSError, ValueError, KeyError):
-            pass
-        try:
-            event = json.loads((STATE / 'panel-event.json').read_text())
-            if event['seq'] != self.last_event:
-                touch = event; self.last_event = event['seq']
-        except (OSError, ValueError, KeyError):
-            pass
-        restore = {**(restore or {}), 'language': CONFIG.get('language', 'zh')}
-        png, ui = self.renderer.render(state, restore=restore, touch=touch)
+        restore = {'language': CONFIG.get('language', 'zh')}
+        png, ui = self.renderer.render(state, restore=restore)
         validate_frame(png)
         state['panel_ui'] = ui
         self.panel_ui = ui
-        atomic(STATE / 'panel-ui.json', encode({'ui': ui, 'last_event': self.last_event,
-               'last_request': self.last_request}))
+        atomic(STATE / 'panel-ui.json', encode({'ui': ui}))
         state['revision'] = hashlib.sha256(encode(state)).hexdigest()[:16]
         with self.lock:
             atomic(STATE / 'snapshot.json', encode(state))
@@ -195,21 +173,11 @@ class Desk:
         return state
 
     def run(self):
-        previous = None
         while True:
-            signatures = []
-            for name in ('panel-request.json', 'panel-event.json'):
+            if time.monotonic() >= self.next_collect:
                 try:
-                    signatures.append((STATE / name).stat().st_mtime_ns)
-                except OSError:
-                    signatures.append(None)
-            fresh = time.monotonic() >= self.next_collect
-            if fresh or signatures != previous:
-                try:
-                    self.collect(fresh=fresh)
-                    previous = signatures
-                    if fresh:
-                        self.next_collect = time.monotonic() + CONFIG['refresh_seconds']
+                    self.collect()
+                    self.next_collect = time.monotonic() + CONFIG['refresh_seconds']
                 except Exception as exc:
                     atomic(STATE / 'collector-error.json', encode({'at': time.time(), 'error': str(exc)}))
                     if self.renderer:
@@ -229,25 +197,6 @@ def serve(port):
         raise RuntimeError('Initial panel render failed; inspect collector-error.json')
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
-            if urlparse(self.path).path == '/api/panel':
-                if self.headers.get('X-Kindle-Desk') != 'panel':
-                    self.send_error(403); return
-                try:
-                    length = int(self.headers.get('Content-Length', '0'))
-                    if not 1 <= length <= 2048: raise ValueError('Invalid request')
-                    self.connection.settimeout(5)
-                    value = json.loads(self.rfile.read(length))['ui']
-                    page, detail = value.get('page', 0), value.get('detailPage', 0)
-                    selected = value.get('selected')
-                    if type(page) is not int or not 0 <= page <= 100 or type(detail) is not int or not 0 <= detail <= 10000:
-                        raise ValueError('Invalid page')
-                    if selected is not None and (not isinstance(selected, str) or len(selected) > 200):
-                        raise ValueError('Invalid selection')
-                    atomic(STATE / 'panel-request.json', encode({'seq': secrets.token_hex(8),
-                           'ui': {'page': page, 'detailPage': detail, 'selected': selected}}))
-                except (OSError, ValueError, KeyError, TypeError):
-                    self.send_error(400); return
-                self.send_response(202); self.send_header('Content-Length', '0'); self.end_headers(); return
             if urlparse(self.path).path == '/api/device':
                 if self.headers.get('X-Kindle-Desk') != 'control':
                     self.send_error(403); return

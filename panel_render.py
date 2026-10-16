@@ -22,8 +22,6 @@ class PanelRenderer:
 
     def render(self, state, restore=None, touch=None):
         self.page.evaluate('([state,ui]) => window.renderDashboard(state,ui)', [state, restore])
-        if touch:
-            self.page.evaluate('p => window.panelTap(p.x,p.y)', touch)
         self.page.evaluate('document.fonts.ready')
         raw = self.page.screenshot(animations='disabled')
         image = Image.open(io.BytesIO(raw)).convert('L').quantize(

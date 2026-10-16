@@ -2,7 +2,7 @@
 const $ = id => document.getElementById(id);
 const capture = new URLSearchParams(location.search).has('capture');
 if(capture) document.body.classList.add('capture');
-let state = null, ui = {page:0, selected:null, detailPage:0, language:'zh'}, detailPages = [];
+let state = null, ui = {language:'zh'};
 const words={
  zh:{system:'系统状态',memory:'内存',disk:'磁盘',battery:'Kindle 电量',running:'进行中',completed:'已完成',previous:'上一页',next:'下一页',read:'阅读全文',back:'返回总览',question:'问题',reply:'Codex 回复',waiting:'正在处理，等待回复。',original:'原文',cached:'缓存',rain:'降雨',noWeather:'暂无天气',waitingWeather:'等待天气更新',lastReading:'上次读数',charging:'正在充电',onBattery:'使用电池',waitingKindle:'等待读取 Kindle',updated:'更新于',sampling:'正在采样',empty:'等待下一次对话',unavailable:'暂时无法读取对话',emptyCopy:'你提出的问题和 Codex 的回复，会出现在这里。',unavailableCopy:'稍后将自动重试。',asked:'提问',answered:'回复'},
  en:{system:'System',memory:'Memory',disk:'Storage',battery:'Kindle battery',running:'In progress',completed:'Completed',previous:'Previous',next:'Next',read:'Read more',back:'Overview',question:'Question',reply:'Codex reply',waiting:'In progress. Waiting for a reply.',original:'Text',cached:'cached',rain:'Rain',noWeather:'Unavailable',waitingWeather:'Waiting for weather',lastReading:'Last read',charging:'Charging',onBattery:'On battery',waitingKindle:'Waiting for Kindle',updated:'Updated',sampling:'Sampling',empty:'Ready for your next conversation',unavailable:'Conversations unavailable',emptyCopy:'Your questions and Codex replies will appear here.',unavailableCopy:'Trying again shortly.',asked:'asked',answered:'replied'}
@@ -14,9 +14,8 @@ const weatherEnglish={0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',
 function paintLanguage(){
  document.documentElement.lang=ui.language==='en'?'en':'zh-CN';
  for(const [id,key] of [['system-heading','system'],['memory-heading','memory'],['disk-heading','disk'],['battery-heading','battery']])$(id).textContent=t(key);
- $('previous').innerHTML=icon('chevron-left')+t('previous');$('next').innerHTML=t('next')+icon('chevron-right');
  $('panel').setAttribute('aria-label',ui.language==='en'?'Kindle Desk dashboard':'Kindle Desk 看板');
- document.querySelector('.feed').setAttribute('aria-label','Codex');document.querySelector('.navigation').setAttribute('aria-label',ui.language==='en'?'Conversation pages':'对话翻页');
+ document.querySelector('.feed').setAttribute('aria-label','Codex');
  for(const [id,zh,en] of [['memory-bar','内存使用率','Memory usage'],['disk-bar','磁盘使用率','Storage usage'],['cpu-chart','CPU 使用率最近趋势','Recent CPU usage']])$(id).setAttribute('aria-label',ui.language==='en'?en:zh);
 }
 const esc = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -34,7 +33,7 @@ function paintHeader(){
  $('temperature').textContent=w.available?num(w.temperature)+'°':'—';$('weather-description').textContent=w.available?(ui.language==='en'?(weatherEnglish[w.code]||'Unknown'):w.description):t('noWeather');
  $('forecast').textContent=w.available?`${num(w.low)}° – ${num(w.high)}°　${t('rain')} ${num(w.rain_percent)}%${w.stale?' · '+t('cached'):''}`:t('waitingWeather');
  const m=state.mac||{};$('computer-name').textContent=m.name||'Mac';$('computer-detail').textContent=m.chip||'macOS';
- $('cpu-value').textContent=num(m.cpu_percent)+'%';$('memory-value').textContent=num(m.memory_percent)+'%';$('disk-value').textContent=num(m.disk_percent)+'%';
+ $('cpu-value').textContent=num(Math.max(0,m.cpu_percent))+'%';$('memory-value').textContent=num(m.memory_percent)+'%';$('disk-value').textContent=num(m.disk_percent)+'%';
  $('memory-detail').textContent=`${num(m.memory_used_gb,1)} / ${num(m.memory_total_gb)} GB`;
  $('disk-detail').textContent=`${num(m.disk_used_gb)} / ${num(m.disk_total_gb)} GB`;
  $('memory-bar').value=m.memory_percent||0;$('disk-bar').value=m.disk_percent||0;
@@ -47,45 +46,16 @@ function paintHeader(){
  $('battery-detail').textContent=valid?(stale?`${t('lastReading')} ${time(k.observed_at)}`:k.charging?t('charging'):t('onBattery')):t('waitingKindle');
  $('updated').textContent=t('updated')+' '+time(state.generated_at);
 }
-function paginate(text,height){
- const node=$('measure');node.style.width='818px';const pages=[];let rest=text;
- while(rest.length){let lo=1,hi=rest.length,best=0;while(lo<=hi){const mid=(lo+hi)>>1;node.textContent=rest.slice(0,mid);if(node.getBoundingClientRect().height<=height){best=mid;lo=mid+1}else hi=mid-1;}
- if(!best)best=1;
- // Prefer a paragraph boundary near the end, without wasting most of a page.
- if(best<rest.length){const breakAt=rest.lastIndexOf('\n',best);if(breakAt>best*.72)best=breakAt+1;}
- pages.push(rest.slice(0,best));rest=rest.slice(best);
- }return pages.length?pages:[''];
-}
 function paintFeed(){
- const items=state.codex?.items||[],running=items.filter(t=>t.status==='running').length;
+ const items=[...(state.codex?.items||[])].sort((a,b)=>(b.updated_at||b.at)-(a.updated_at||a.at)).slice(0,3);
+ const running=items.filter(item=>item.status==='running').length;
  $('counts').textContent=items.length?`${running} ${t('running')} · ${items.length-running} ${t('completed')}`:'';
- ui.page=Math.min(ui.page,Math.max(0,Math.ceil(items.length/3)-1));
- const selected=items.find(t=>t.id===ui.selected);
- if(ui.selected&&!selected){ui.selected=null;ui.detailPage=0;}
- if(selected){
-  const text=`${t('question')}\n${selected.question}\n\n${t('reply')}\n${selected.reply||t('waiting')}`;
-  $('conversations').innerHTML=`<article class="detail"><div class="detail-top"><button class="back" data-action="overview">${icon('arrow-left')}${t('back')}</button>${status(selected)}</div><div id="detail-copy" class="detail-copy"></div><div class="detail-caption">${time(selected.at)} ${t('asked')}${selected.status==='completed'?' · '+time(selected.updated_at||selected.at)+' '+t('answered'):''}</div></article>`;
-  detailPages=paginate(text,$('detail-copy').clientHeight-2);ui.detailPage=Math.min(ui.detailPage,detailPages.length-1);
-  $('detail-copy').textContent=detailPages[ui.detailPage];$('page-label').textContent=`${t('original')} ${ui.detailPage+1} / ${detailPages.length}`;
-  $('previous').disabled=ui.detailPage===0;$('next').disabled=ui.detailPage===detailPages.length-1;
- }else{
-  const visible=items.slice(ui.page*3,ui.page*3+3);
-  $('conversations').innerHTML=visible.map(t=>`<button class="turn" data-action="open" data-id="${esc(t.id)}" aria-label="${ui.language==='en'?'Read full question and reply':'阅读完整问题和回复'}"><div class="turn-meta"><div><time>${time(t.at)}</time></div>${status(t)}</div><div class="question"><div class="question-text">${esc(t.question)}</div></div><div class="reply-label">Codex${t.status==='completed'?' · '+time(t.updated_at||t.at):''}</div><div class="reply">${esc(t.reply||words[ui.language==='en'?'en':'zh'].waiting)}</div><span class="turn-link">${words[ui.language==='en'?'en':'zh'].read}${icon('chevron-right')}</span></button>`).join('') || `<div class="empty"><h2>${state.codex?.available?t('empty'):t('unavailable')}</h2><p>${state.codex?.available?t('emptyCopy'):t('unavailableCopy')}</p></div>`;
-  $('page-label').textContent=`${ui.page+1} / ${Math.max(1,Math.ceil(items.length/3))}`;
-  $('previous').disabled=ui.page===0;$('next').disabled=(ui.page+1)*3>=items.length;
- }
+ $('conversations').innerHTML=items.map(item=>`<article class="turn"><div class="turn-meta"><time>${time(item.at)}</time>${status(item)}</div><div class="question"><div class="question-text">${esc(item.question)}</div></div><div class="reply-label">Codex${item.status==='completed'?' · '+time(item.updated_at||item.at):''}</div><div class="reply">${esc(item.reply||t('waiting'))}</div></article>`).join('') || `<div class="empty"><h2>${state.codex?.available?t('empty'):t('unavailable')}</h2><p>${state.codex?.available?t('emptyCopy'):t('unavailableCopy')}</p></div>`;
+ document.querySelectorAll('.reply').forEach(node=>{
+  const height=node.clientHeight, line=parseFloat(getComputedStyle(node).lineHeight);
+  node.style.webkitLineClamp=String(Math.max(1,Math.floor(height/line)));
+ });
  window.panelUI={...ui};
 }
-window.renderDashboard=(value,restore)=>{state=value;if(restore)ui={...ui,...restore};paintLanguage();paintHeader();paintFeed();window.panelReady=true;return {...ui};};
-function action(button){
- if(!button||button.disabled||!state)return;
- const a=button.dataset.action;
- if(a==='open'){ui.selected=button.dataset.id;ui.detailPage=0;}
- else if(a==='overview'){ui.selected=null;ui.detailPage=0;}
- else if(a==='prev'){if(ui.selected)ui.detailPage=Math.max(0,ui.detailPage-1);else ui.page=Math.max(0,ui.page-1);}
- else if(a==='next'){if(ui.selected)ui.detailPage=Math.min(detailPages.length-1,ui.detailPage+1);else ui.page=Math.min(Math.ceil((state.codex?.items||[]).length/3)-1,ui.page+1);}
- paintFeed();
-}
-window.panelTap=(x,y)=>{const target=document.elementFromPoint(x,y)?.closest('[data-action]');action(target);return {...ui};};
-document.addEventListener('click',async e=>{const b=e.target.closest('[data-action]');if(!b||b.disabled)return;action(b);if(!capture){try{await fetch('/api/panel',{method:'POST',headers:{'Content-Type':'application/json','X-Kindle-Desk':'panel'},body:JSON.stringify({ui})});}catch{}}});
+window.renderDashboard=(value,restore)=>{state=value;ui={language:restore?.language==='en'?'en':'zh'};paintLanguage();paintHeader();paintFeed();window.panelReady=true;return {...ui};};
 if(!capture){async function poll(){try{const r=await fetch('/api/state');const s=await r.json();window.renderDashboard(s,s.panel_ui);}catch{}}poll();setInterval(poll,2000);}

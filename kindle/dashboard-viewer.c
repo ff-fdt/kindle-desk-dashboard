@@ -43,7 +43,13 @@ API(Ptr, gdk_display_get_default, (void));
 API(void, gdk_display_sync, (Ptr));
 API(void, gdk_window_process_all_updates, (void));
 
-static Ptr image;
+static Ptr image, window;
+API(void, gtk_widget_hide, (Ptr));
+API(Ptr, gdk_x11_display_get_xdisplay, (Ptr));
+API(int, XGetInputFocus, (Ptr, unsigned long *, int *));
+API(int, XFetchName, (Ptr, unsigned long, char **));
+API(int, XQueryTree, (Ptr, unsigned long, unsigned long *, unsigned long *, unsigned long **, unsigned int *));
+API(int, XFree, (Ptr));
 static volatile sig_atomic_t exiting;
 static double down_x, down_y;
 static unsigned int down_time;
@@ -88,18 +94,6 @@ static int release(Ptr w, Ptr event, Ptr data) {
             fflush(stderr);
         }
     }
-    else if (touching && gdk_event_get_root_coords(event, &x, &y)
-        && x >= 0 && x < 1236 && y >= 120 && y < 1648
-        && x-down_x < 22 && down_x-x < 22 && y-down_y < 22 && down_y-y < 22
-        && gdk_event_get_time(event)-down_time < 1200) {
-        struct timespec now; clock_gettime(CLOCK_REALTIME, &now);
-        uint64_t seq = ((uint64_t)now.tv_sec << 32) | (uint32_t)now.tv_nsec;
-        FILE *file = fopen("touch.req.tmp", "w");
-        if (file) {
-            fprintf(file, "%016llx %u %u\n", (unsigned long long)seq, (unsigned)x, (unsigned)y);
-            if (fclose(file) == 0) rename("touch.req.tmp", "touch.req");
-        }
-    }
     touching = 0;
     return 1;
 }
@@ -118,11 +112,41 @@ static int load_frame(void) {
     g_object_unref(pixbuf);
     return ok;
 }
+/* Walk from GTK's focused child to its named application window. */
+static int focus_kind(void) {
+    Ptr display = gdk_x11_display_get_xdisplay(gdk_display_get_default());
+    unsigned long current; int revert;
+    XGetInputFocus(display, &current, &revert);
+    for (int depth=0; depth<8 && current>1; ++depth) {
+        char *name=NULL; int kind=0;
+        if (XFetchName(display, current, &name) && name) {
+            if (strstr(name, "ID:uk.felixf.kindledesk")) kind=1;
+            else if (strstr(name, "L:A_") &&
+                     (strstr(name, "ID:com.lab126.KPPMainApp_") ||
+                      strstr(name, "ID:com.lab126.booklet.home_"))) kind=2;
+            else if (*name) kind=3;
+            XFree(name);
+        }
+        if (kind) return kind;
+        unsigned long root, parent, *children=NULL; unsigned count=0;
+        if (!XQueryTree(display,current,&root,&parent,&children,&count)) break;
+        if (children) XFree(children);
+        if (current==root) break;
+        current=parent;
+    }
+    return 0;
+}
 static int tick(Ptr data) {
     (void)data;
     if (exiting || exists("viewer.quit")) { gtk_main_quit(); return 0; }
+    int focus = focus_kind();
+    if (focus == 2) {
+        gtk_widget_hide(window);
+        gtk_widget_show_all(window);
+        fprintf(stderr, "restored dashboard above native home\n");
+    }
     /* Only acknowledge after GTK's paint has run, followed by an X sync. */
-    if (*pending) {
+    if (*pending && focus == 1) {
         gdk_window_process_all_updates();
         gdk_display_sync(gdk_display_get_default());
         FILE *file = fopen("frame.displayed.tmp", "w");
@@ -134,7 +158,7 @@ static int tick(Ptr data) {
         *pending = 0;
     }
     char next[32];
-    if (read_revision(next) && strcmp(next, revision) && load_frame()) {
+    if (!*pending && read_revision(next) && strcmp(next, revision) && load_frame()) {
         strcpy(pending, next);
         gtk_widget_queue_draw(image);
     }
@@ -147,6 +171,8 @@ int main(int argc, char **argv) {
     void *gtk = dlopen("libgtk-x11-2.0.so.0", RTLD_NOW | RTLD_GLOBAL);
     if (!gtk) { fprintf(stderr, "%s\n", dlerror()); return 3; }
 #define LOAD(name) do { *(void **)(&name) = dlsym(gtk, #name); if (!name) { fprintf(stderr, "missing %s\n", #name); return 3; } } while (0)
+    LOAD(gtk_widget_hide); LOAD(gdk_x11_display_get_xdisplay);
+    LOAD(XGetInputFocus); LOAD(XFetchName); LOAD(XQueryTree); LOAD(XFree);
     LOAD(gtk_init_check); LOAD(gtk_window_new); LOAD(gtk_window_set_title);
     LOAD(gtk_window_set_default_size); LOAD(gtk_window_set_decorated);
     LOAD(gtk_event_box_new); LOAD(gtk_image_new); LOAD(gtk_image_set_from_pixbuf);
@@ -160,7 +186,8 @@ int main(int argc, char **argv) {
     if (!gtk_init_check(&argc, &argv)) return 4;
     image = gtk_image_new();
     if (!load_frame()) { fprintf(stderr, "invalid cached portrait frame\n"); return 5; }
-    Ptr window = gtk_window_new(0), events = gtk_event_box_new();
+    window = gtk_window_new(0);
+    Ptr events = gtk_event_box_new();
     gtk_window_set_title(window, "L:A_N:application_ID:uk.felixf.kindledesk_PC:N_O:U");
     gtk_window_set_default_size(window, 1236, 1648);
     gtk_window_set_decorated(window, 0);

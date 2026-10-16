@@ -48,3 +48,24 @@ def test_restore_reader_marker_overrides_delayed_start(tmp_path):
     result,local=run_bootstrap(tmp_path,'restore')
     assert result.returncode==0 and not (tmp_path/'started').exists()
     assert not (local/'enabled').exists()
+
+
+def test_persistent_bootstrap_requests_network_before_waiting(tmp_path):
+    base, local, binary = [tmp_path/n for n in ('device','persistent','bin')]
+    for p in (base,local,binary): p.mkdir()
+    (local/'enabled').touch()
+    for name, body in {
+        'sleep': 'exit 0',
+        'lipc-set-prop': '''printf '%s\\n' "$*" > "$TEST_ROOT/request"
+mkdir -p "$KINDLE_DESK_BASE/bin"
+printf '#!/bin/sh\\ntouch "$TEST_ROOT/started"\\n' > "$KINDLE_DESK_BASE/run.sh"
+touch "$KINDLE_DESK_BASE/bin/ble-client"
+chmod +x "$KINDLE_DESK_BASE/bin/ble-client"'''
+    }.items():
+        script=binary/name; script.write_text('#!/bin/sh\n'+body+'\n'); script.chmod(0o755)
+    env={**os.environ,'PATH':str(binary)+os.pathsep+os.environ['PATH'],
+         'KINDLE_DESK_BASE':str(base),'KINDLE_DESK_PERSISTENT':str(local),
+         'TEST_ROOT':str(tmp_path)}
+    subprocess.run(['sh',str(SCRIPT)],env=env,check=True,timeout=5)
+    assert (tmp_path/'started').exists()
+    assert (tmp_path/'request').read_text().strip()=='-i com.lab126.volumd useUsbForNetwork 1'

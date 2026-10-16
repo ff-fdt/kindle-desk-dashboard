@@ -1,6 +1,6 @@
 # 面板与维护 API
 
-目标设备为 Paperwhite 5 Signature，**竖屏 1236 × 1648**，8-bit 灰度。后端和蓝牙接收端独立于页面样式，前端通过 panel/ 渲染 PNG，并通过认证触摸坐标回传支持阅读与翻页。
+目标设备为 Paperwhite 5 Signature，**竖屏 1236 × 1648**，8-bit 灰度。后端和蓝牙接收端独立于页面样式，前端通过 panel/ 渲染 PNG，固定显示最新三条对话。
 
 - 数据：`GET http://127.0.0.1:8791/api/state`。`generated_at` 是 Unix 秒；`timezone` 为 `Europe/London`。
 - `weather` 含真实观测、最高/最低温、降雨概率、`available`、`stale`、`observed_at`、`fetched_at`。不可用/缓存必须如实展示。
@@ -38,6 +38,6 @@ HTTP 202 为已排队，`seq` 为请求标识。通过 `GET /api/device` 检查�
 
 ## 0.2 交互面板
 
-内置 panel/ 是正式前端，不再依赖外部 PNG 上传。浏览器访问 /panel/，点击内容打开全文，底部翻页。POST /api/panel 携带 X-Kindle-Desk: panel 与 {"ui":{"page":0,"selected":null,"detailPage":0}} 保存阅读状态。Kindle 触摸经 BLE 认证回传后使用同一 DOM 命中检测；顶部下滑仍由原生窗口处理。kindle 字段提供实际电量、充电状态和读数时间，超过 180 秒标旧。
+内置 panel/ 是正式前端，不再依赖外部 PNG 上传。浏览器访问 /panel/，固定显示最新三条对话。顶部下滑打开原生控制栏。kindle 字段提供实际电量、充电状态和读数时间，超过 180 秒标旧。
 
 界面语言由安装包 config/example.json 的 language 决定（或主机本地配置覆盖）。

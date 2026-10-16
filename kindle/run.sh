@@ -21,7 +21,8 @@ cleanup() {
 }
 trap cleanup EXIT
 trap 'exit 0' INT TERM
-sh ./ui-mode.sh dashboard
+(until sh ./ui-mode.sh dashboard; do sleep 3; done) &
+display_pid=$!
 lipc-set-prop com.lab126.powerd preventScreenSaver 1 || true
 sh ./control.sh &
 control_pid=$!
@@ -31,5 +32,5 @@ while [ -f /var/local/kindle-desk/enabled ] || [ -f /tmp/kindle-desk-manual ]; d
   wait "$client_pid" || true
   client_pid=''
   # A missing Mac is expected; retain the last frame and reconnect quietly.
-  sleep 15
+  sleep 3
 done

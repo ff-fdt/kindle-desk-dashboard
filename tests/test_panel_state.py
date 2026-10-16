@@ -6,7 +6,7 @@ from PIL import Image
 import desk
 
 
-def test_edition_language_and_consumed_tap_survive_collector_restart(tmp_path, monkeypatch):
+def test_edition_language_and_old_navigation_are_ignored(tmp_path, monkeypatch):
     output = io.BytesIO()
     Image.new('L', (1236, 1648), 255).save(output, format='PNG')
     png = output.getvalue()
@@ -31,9 +31,9 @@ def test_edition_language_and_consumed_tap_survive_collector_restart(tmp_path, m
     (tmp_path/'panel-request.json').write_text(json.dumps({'seq':'browser-1','ui':{'language':'zh'}}))
     (tmp_path/'panel-event.json').write_text(json.dumps({'seq':'tap-1','x':1000,'y':1600}))
     initial = desk.Desk().collect()['panel_ui']
-    assert initial == {'language': 'en', 'page': 1}
+    assert initial == {'language': 'en'}
     restarted = desk.Desk()
     assert restarted.collect()['panel_ui'] == initial
-    # A newly arrived tap still navigates.
+    # A newly arrived legacy tap also leaves the fixed panel unchanged.
     (tmp_path/'panel-event.json').write_text(json.dumps({'seq':'tap-2','x':1000,'y':1600}))
-    assert restarted.collect(fresh=False)['panel_ui'] == {'language': 'en', 'page': 2}
+    assert restarted.collect(fresh=False)['panel_ui'] == {'language': 'en'}

@@ -1,6 +1,6 @@
 # Kindle Desk
 
-An interactive e-ink dashboard for Kindle and Mac. A large clock, weather, recent Codex questions and replies, Mac resources and Kindle battery level, updated over Bluetooth.
+An e-ink dashboard for Kindle and Mac. A large clock, weather, recent Codex questions and replies, Mac resources and Kindle battery level, updated over Bluetooth.
 
 [中文说明](docs/README.zh-CN.md) · [Setup](docs/SETUP.md) · [Protocol](docs/PROTOCOL.md) · [License](LICENSE)
 
@@ -18,7 +18,7 @@ Each source package comes with its interface language configured. Follow [Setup]
 - Portrait 1236 × 1648 layout designed for e-ink.
 - Time, date and local weather.
 - Codex questions and replies with **In progress** and **Completed** turn states.
-- Tap a conversation to read the full text, turn pages and return to the overview.
+- Three latest conversations on one page, with questions, replies and completion status.
 - Swipe down for Kindle's native brightness and warm-light controls.
 - Mac CPU, memory and storage, plus Kindle battery level.
 
@@ -43,7 +43,7 @@ The device setup uses a jailbroken Paperwhite 5 Signature Edition, firmware 5.18
 
 ## How it works
 
-The Mac reads local Codex conversations, collects weather and resource data, and renders the panel as a grayscale PNG. The Kindle receives frames over an authenticated, AES-256-GCM encrypted Bluetooth connection. Touch events travel back to the Mac for page navigation. A GTK/X11 window displays the panel alongside the Kindle's native controls.
+The Mac reads local Codex conversations, collects weather and resource data, and renders the panel as a grayscale PNG. The Kindle receives frames over an authenticated, AES-256-GCM encrypted Bluetooth connection. A GTK/X11 window displays the panel alongside the Kindle's native controls.
 
 The preview runs on `127.0.0.1`. Pairing keys are provisioned over USB. See [Protocol](docs/PROTOCOL.md) and [Data handling](docs/PRIVACY.md) for details.
 

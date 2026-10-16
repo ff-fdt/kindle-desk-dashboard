@@ -12,6 +12,6 @@ Device commands use a separate characteristic: 16 ASCII hex sequence bytes, one 
 
 Opcode `09` reports telemetry: one opcode byte, uint32-LE counter, five bytes (battery percent, charging, brightness, warmth, mode), then HMAC-SHA256 over the first 10 bytes. Battery is 0–100, charging 0/1, levels 0–24, mode 0/1; 255 denotes unavailable values except mode. The Mac rejects non-monotonic counters within a session.
 
-Opcode `0A` sends a tap: one opcode byte, 16 ASCII hex sequence bytes, uint16-LE x, uint16-LE y, then HMAC-SHA256 over those 21 bytes. Bounds are 1236×1648. The Mac deduplicates events before invoking the same DOM hit testing used by the preview. Native top-edge gestures are handled locally by the GTK viewer.
+Opcode `0A` is reserved for legacy clients. Native top-edge gestures are handled locally by the GTK viewer.
 
 Protocol opcodes above use hexadecimal notation.
