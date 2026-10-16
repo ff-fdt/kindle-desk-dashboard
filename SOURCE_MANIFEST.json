@@ -4,7 +4,7 @@
   "files": {
     ".github/workflows/checks.yml": "e269aa54da8e803000bedd80757bf8a4785472c4a321d3393beda6c826eed6cc",
     ".gitignore": "dab7f51b154f289c61dcc363a88dd77483b3e07112f16be6dce51e3f78b62fcd",
-    "LICENSE": "ce5bd4de97567be7e9c4034f2fb19ac4db3635b7f8fd6b8bcde6d62e6bf914c7",
+    "LICENSE": "299b7d98159bf9a36303e4611dc161550a650693b4f551dab309ddcbed704d3f",
     "README.md": "876ed1499a5615255749cf214e67e80b2d66191fb17f094588267e767ff7759d",
     "config/example.json": "b32224be49791f711d5a14aaf5e79d07996fc21f3a351fba68312a7819d6c4a2",
     "conversations.py": "5cb67fa8ec788931c44a2e4b3e78135445b299f2bbdc3ca5f03a6cf27d7cfcc7",
