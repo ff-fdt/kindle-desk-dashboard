@@ -29,7 +29,7 @@
     "kindle/kindle-desk.conf": "cec80e4d7227a18ddafee76d7842fa1d15c0aa2edd47d050439e5e4ecb75a3d2",
     "kindle/recovery-emergency.sh": "784f85fb6c1ac5bd796f01d2903a319d51379eb00deb2083bbf81f36ee0d8a2d",
     "kindle/restore-reader.sh": "196441b3c69bd92d135d34892a37f54c18968d74475510df52e2b3bc4e8fd7a0",
-    "kindle/run.sh": "dab40c2b23b033804c9a74a84f732415169eff655a5b726b4b0cd25c08c6e851",
+    "kindle/run.sh": "49b1f1f7bd6e965aa65b21e245d49df19ae8d2cc7ee7c163698790f02c6782e3",
     "kindle/start-manual.sh": "d24b1eb4c1f55a7700d5860f4e8a9e7f3efe7d1f6ccf9f22cc508b4a51004884",
     "kindle/ui-mode.sh": "7e32caaa93f2959931d64294de74cb0a2b39a5f3f80dc137edafe5922cd3a037",
     "kindle/usb-service.sh": "79dfb6f9d6dec404f7a22196cf2f6e4bb9278050687d01571b8750a0e1ebc1d6",
