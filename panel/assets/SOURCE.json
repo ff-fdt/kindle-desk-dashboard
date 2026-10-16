@@ -1,0 +1,26 @@
+{
+  "project": "https://github.com/tabler/tabler-icons",
+  "version": "3.34.1",
+  "license": "MIT",
+  "icons": [
+    "sun",
+    "cloud",
+    "cloud-rain",
+    "cloud-snow",
+    "cloud-storm",
+    "mist",
+    "device-laptop",
+    "battery",
+    "battery-1",
+    "battery-2",
+    "battery-3",
+    "battery-4",
+    "battery-charging",
+    "chevron-left",
+    "chevron-right",
+    "arrow-left",
+    "check",
+    "loader",
+    "device-tablet"
+  ]
+}

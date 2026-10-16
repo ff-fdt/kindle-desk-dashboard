@@ -1,0 +1,20 @@
+state/
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+build/
+dist/
+config/local.json
+config/pairing-key.txt
+*.log
+.DS_Store
+
+# Local maintenance and credentials
+work/
+*.pem
+*.key
+id_ed25519*
+*.sqlite*
+*.jsonl
+*.toml.local

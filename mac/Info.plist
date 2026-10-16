@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleIdentifier</key><string>uk.felixf.kindledesk.bluetooth</string>
+<key>CFBundleName</key><string>Kindle Desk Bluetooth</string>
+<key>CFBundleExecutable</key><string>KindleDeskBluetooth</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>CFBundleShortVersionString</key><string>0.1.1</string>
+<key>CFBundleVersion</key><string>2</string>
+<key>LSUIElement</key><true/>
+<key>NSBluetoothAlwaysUsageDescription</key><string>通过蓝牙向你的 Kindle 发送时间、伦敦天气与 Codex 最近回复。</string>
+</dict></plist>
