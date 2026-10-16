@@ -3,13 +3,19 @@
 给 Kindle 做的桌面看板：大时钟、天气、Codex 问题与回复、Mac 资源状态和 Kindle 电量，通过蓝牙更新，不依赖同一 Wi-Fi。
 
 - 竖屏 1236 × 1648，面向墨水屏设计。
-- 右下角 `EN / 中文` 切换界面语言，重启服务后保留。对话正文保留原文。
+- 下载时选择中文版或英文版，Kindle 上不放语言切换按钮。对话正文保留原文。
 - 点一条对话打开全文，底部翻页，可返回总览。
 - 仅显示“进行中 / 已完成”两种回合状态。“已完成”指本轮回复结束，不代表整个项目成功。
 - 顶部下滑打开 Kindle 原生控制栏，可调亮度和暖光。
 - 显示电脑 CPU、内存、磁盘和 Kindle 电量，不显示电脑电池或 Wi-Fi。
 
 ![中文界面，虚构演示数据](images/panel-zh.png)
+
+## 下载
+
+[中文版源码包](https://github.com/ff-fdt/kindle-desk-dashboard/releases/latest/download/kindle-desk-zh.zip) · [English source package](https://github.com/ff-fdt/kindle-desk-dashboard/releases/latest/download/kindle-desk-en.zip)
+
+两个包已分别预设界面语言；它们是需要按说明配置和编译的源码包，不是固件包。
 
 ## 本机预览
 

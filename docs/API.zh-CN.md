@@ -38,4 +38,6 @@ HTTP 202 为已排队，`seq` 为请求标识。通过 `GET /api/device` 检查�
 
 ## 0.2 交互面板
 
-内置 panel/ 是正式前端，不再依赖外部 PNG 上传。浏览器访问 /panel/，点击内容打开全文，底部翻页。POST /api/panel 携带 X-Kindle-Desk: panel 与 {"ui":{"page":0,"selected":null,"detailPage":0,"language":"zh"}} 保存阅读状态。Kindle 触摸经 BLE 认证回传后使用同一 DOM 命中检测；顶部下滑仍由原生窗口处理。kindle 字段提供实际电量、充电状态和读数时间，超过 180 秒标旧。
+内置 panel/ 是正式前端，不再依赖外部 PNG 上传。浏览器访问 /panel/，点击内容打开全文，底部翻页。POST /api/panel 携带 X-Kindle-Desk: panel 与 {"ui":{"page":0,"selected":null,"detailPage":0}} 保存阅读状态。Kindle 触摸经 BLE 认证回传后使用同一 DOM 命中检测；顶部下滑仍由原生窗口处理。kindle 字段提供实际电量、充电状态和读数时间，超过 180 秒标旧。
+
+界面语言由安装包 config/example.json 的 language 决定（或主机本地配置覆盖），不通过 Kindle 按钮或面板 API 切换。

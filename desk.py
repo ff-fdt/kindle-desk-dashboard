@@ -176,6 +176,7 @@ class Desk:
                 touch = event; self.last_event = event['seq']
         except (OSError, ValueError, KeyError):
             pass
+        restore = {**(restore or {}), 'language': CONFIG.get('language', 'zh')}
         png, ui = self.renderer.render(state, restore=restore, touch=touch)
         validate_frame(png)
         state['panel_ui'] = ui
@@ -238,14 +239,12 @@ def serve(port):
                     value = json.loads(self.rfile.read(length))['ui']
                     page, detail = value.get('page', 0), value.get('detailPage', 0)
                     selected = value.get('selected')
-                    language = value.get('language', 'zh')
-                    if language not in ('zh', 'en'): raise ValueError('Invalid language')
                     if type(page) is not int or not 0 <= page <= 100 or type(detail) is not int or not 0 <= detail <= 10000:
                         raise ValueError('Invalid page')
                     if selected is not None and (not isinstance(selected, str) or len(selected) > 200):
                         raise ValueError('Invalid selection')
                     atomic(STATE / 'panel-request.json', encode({'seq': secrets.token_hex(8),
-                           'ui': {'page': page, 'detailPage': detail, 'selected': selected, 'language': language}}))
+                           'ui': {'page': page, 'detailPage': detail, 'selected': selected}}))
                 except (OSError, ValueError, KeyError, TypeError):
                     self.send_error(400); return
                 self.send_response(202); self.send_header('Content-Length', '0'); self.end_headers(); return

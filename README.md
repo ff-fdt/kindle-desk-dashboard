@@ -4,10 +4,17 @@ An interactive, monochrome desk dashboard for a jailbroken Kindle and a Mac. A l
 
 [中文说明](docs/README.zh-CN.md) · [Setup](docs/SETUP.md) · [Protocol](docs/PROTOCOL.md) · [License](LICENSE)
 
+## Downloads
+
+Choose an edition once when downloading; each archive has its language preconfigured. These are source packages, requiring the setup steps below, not firmware or prebuilt receiver installers.
+
+- [中文版 source package](https://github.com/ff-fdt/kindle-desk-dashboard/releases/latest/download/kindle-desk-zh.zip)
+- [English source package](https://github.com/ff-fdt/kindle-desk-dashboard/releases/latest/download/kindle-desk-en.zip)
+
 ## Interface
 
 - Portrait 1236 × 1648 layout, designed for e-ink.
-- Chinese / English switch on the panel; the choice survives a service restart. Conversation text stays in its original language.
+- Separate Chinese and English download editions. The Kindle has no language switch; conversation text stays in its original language.
 - Tap a conversation to read its full question and reply; use previous / next and return to the overview.
 - Two conversation-turn states: **In progress** and **Completed**. Completed means the reply ended, not that every project objective succeeded.
 - Native Kindle top-edge quick settings remain available for brightness and warm-light adjustments.
@@ -36,7 +43,7 @@ python3 -m venv .venv
 
 Open **http://127.0.0.1:8791/panel/**. The preview works without a Kindle; battery remains unavailable until the receiver reports it. Codex data is read from the current user's local SQLite registry and JSONL logs in read-only mode. No OpenAI API key is required. An unsupported local log format may yield no conversations.
 
-Copy `config/example.json` to `config/local.json` to set coordinates, city, timezone, refresh intervals and the initial UI language (`zh` or `en`). Runtime state defaults to `state/`; set `KINDLE_DESK_STATE_DIR` to keep it elsewhere. Set `KINDLE_DESK_CHROMIUM` to pin a Chromium executable for a service installation. System fonts render locally and are not distributed.
+Copy `config/example.json` to `config/local.json` to set coordinates, city, timezone, refresh intervals and the installation language (`zh` or `en`). Runtime state defaults to `state/`; set `KINDLE_DESK_STATE_DIR` to keep it elsewhere. Set `KINDLE_DESK_CHROMIUM` to pin a Chromium executable for a service installation. System fonts render locally and are not distributed.
 
 The macOS BLE app, device builds, USB provisioning and recovery procedures are documented in [Setup](docs/SETUP.md). Device SDK headers, stock libraries and jailbreak utilities must be obtained separately. There are no bundled firmware images or ready-to-flash binaries.
 

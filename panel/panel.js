@@ -15,7 +15,6 @@ function paintLanguage(){
  document.documentElement.lang=ui.language==='en'?'en':'zh-CN';
  for(const [id,key] of [['system-heading','system'],['memory-heading','memory'],['disk-heading','disk'],['battery-heading','battery']])$(id).textContent=t(key);
  $('previous').innerHTML=icon('chevron-left')+t('previous');$('next').innerHTML=t('next')+icon('chevron-right');
- $('language').textContent=ui.language==='en'?'中文':'EN';$('language').setAttribute('aria-label',ui.language==='en'?'切换到中文':'Switch to English');
  $('panel').setAttribute('aria-label',ui.language==='en'?'Kindle Desk dashboard':'Kindle Desk 看板');
  document.querySelector('.feed').setAttribute('aria-label','Codex');document.querySelector('.navigation').setAttribute('aria-label',ui.language==='en'?'Conversation pages':'对话翻页');
  for(const [id,zh,en] of [['memory-bar','内存使用率','Memory usage'],['disk-bar','磁盘使用率','Storage usage'],['cpu-chart','CPU 使用率最近趋势','Recent CPU usage']])$(id).setAttribute('aria-label',ui.language==='en'?en:zh);
@@ -81,8 +80,7 @@ window.renderDashboard=(value,restore)=>{state=value;if(restore)ui={...ui,...res
 function action(button){
  if(!button||button.disabled||!state)return;
  const a=button.dataset.action;
- if(a==='language'){ui.language=ui.language==='en'?'zh':'en';paintLanguage();paintHeader();}
- else if(a==='open'){ui.selected=button.dataset.id;ui.detailPage=0;}
+ if(a==='open'){ui.selected=button.dataset.id;ui.detailPage=0;}
  else if(a==='overview'){ui.selected=null;ui.detailPage=0;}
  else if(a==='prev'){if(ui.selected)ui.detailPage=Math.max(0,ui.detailPage-1);else ui.page=Math.max(0,ui.page-1);}
  else if(a==='next'){if(ui.selected)ui.detailPage=Math.min(detailPages.length-1,ui.detailPage+1);else ui.page=Math.min(Math.ceil((state.codex?.items||[]).length/3)-1,ui.page+1);}
