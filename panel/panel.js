@@ -53,7 +53,10 @@ function paintFeed(){
  $('conversations').innerHTML=items.map(item=>`<article class="turn"><div class="turn-meta"><time>${time(item.at)}</time>${status(item)}</div><div class="question"><div class="question-text">${esc(item.question)}</div></div><div class="reply-label">Codex${item.status==='completed'?' · '+time(item.updated_at||item.at):''}</div><div class="reply">${esc(item.reply||t('waiting'))}</div></article>`).join('') || `<div class="empty"><h2>${state.codex?.available?t('empty'):t('unavailable')}</h2><p>${state.codex?.available?t('emptyCopy'):t('unavailableCopy')}</p></div>`;
  document.querySelectorAll('.reply').forEach(node=>{
   const height=node.clientHeight, line=parseFloat(getComputedStyle(node).lineHeight);
-  node.style.webkitLineClamp=String(Math.max(1,Math.floor(height/line)));
+  const lines=Math.max(1,Math.floor(height/line));
+  node.style.webkitLineClamp=String(lines);
+  node.style.flex='0 0 auto';
+  node.style.height=(lines*line)+'px';
  });
  window.panelUI={...ui};
 }
