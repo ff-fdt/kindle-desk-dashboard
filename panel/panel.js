@@ -12,6 +12,7 @@ const zone=()=>state?.timezone||'Europe/London';
 const locale=()=>ui.language==='en'?'en-GB':'zh-CN';
 const weatherEnglish={0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Rime fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',56:'Freezing drizzle',57:'Freezing drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',66:'Freezing rain',67:'Freezing rain',71:'Light snow',73:'Snow',75:'Heavy snow',77:'Snow grains',80:'Showers',81:'Showers',82:'Heavy showers',85:'Snow showers',86:'Snow showers',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'};
 function paintLanguage(){
+ $('refresh').textContent=ui.language==='en'?'Refresh':'刷新';
  document.documentElement.lang=ui.language==='en'?'en':'zh-CN';
  for(const [id,key] of [['system-heading','system'],['memory-heading','memory'],['disk-heading','disk'],['battery-heading','battery']])$(id).textContent=t(key);
  $('panel').setAttribute('aria-label',ui.language==='en'?'Kindle Desk dashboard':'Kindle Desk 看板');
@@ -62,3 +63,4 @@ function paintFeed(){
 }
 window.renderDashboard=(value,restore)=>{state=value;ui={language:restore?.language==='en'?'en':'zh'};paintLanguage();paintHeader();paintFeed();window.panelReady=true;return {...ui};};
 if(!capture){async function poll(){try{const r=await fetch('/api/state');const s=await r.json();window.renderDashboard(s,s.panel_ui);}catch{}}poll();setInterval(poll,2000);}
+if(!capture) $('refresh').addEventListener('click',()=>fetch('/api/refresh',{method:'POST',headers:{'X-Kindle-Desk':'refresh'}}));

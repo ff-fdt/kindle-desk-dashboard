@@ -94,6 +94,18 @@ static int release(Ptr w, Ptr event, Ptr data) {
             fflush(stderr);
         }
     }
+    else if (touching && gdk_event_get_root_coords(event, &x, &y)
+        && x >= 934 && x < 1188 && y >= 1518 && y < 1576
+        && x-down_x < 22 && down_x-x < 22 && y-down_y < 22 && down_y-y < 22
+        && gdk_event_get_time(event)-down_time < 1200) {
+        struct timespec now; clock_gettime(CLOCK_REALTIME, &now);
+        uint64_t seq = ((uint64_t)now.tv_sec << 32) | (uint32_t)now.tv_nsec;
+        FILE *file = fopen("touch.req.tmp", "w");
+        if (file) {
+            fprintf(file, "%016llx %u %u\n", (unsigned long long)seq, (unsigned)x, (unsigned)y);
+            if (fclose(file) == 0) rename("touch.req.tmp", "touch.req");
+        }
+    }
     touching = 0;
     return 1;
 }

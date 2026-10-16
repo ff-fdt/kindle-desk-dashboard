@@ -133,6 +133,17 @@ class WeatherCollector:
                 'available': self.cached is not None,
                 'stale': not self.cached or now - self.cached.get('fetched_at', 0) > 1800}
 
+def next_minute(now):
+    return (int(now) // 60 + 1) * 60
+
+
+def refresh_event(event):
+    return (isinstance(event, dict) and isinstance(event.get('seq'), str)
+            and isinstance(event.get('x'), (int, float))
+            and isinstance(event.get('y'), (int, float))
+            and 934 <= event['x'] < 1188 and 1518 <= event['y'] < 1576)
+
+
 class Desk:
     def __init__(self):
         self.codex, self.weather = CodexCollector(), WeatherCollector(CONFIG)
@@ -142,6 +153,11 @@ class Desk:
         self.renderer = None
         self.ready = threading.Event()
         self.next_collect = 0
+        self.refresh_requested = threading.Event()
+        try:
+            self.last_refresh = json.loads((STATE / 'refresh-consumed.json').read_text()).get('seq')
+        except (OSError, ValueError):
+            self.last_refresh = None
         self.last_state = None
         self.panel_ui = {'language': CONFIG.get('language', 'zh')}
 
@@ -174,10 +190,24 @@ class Desk:
 
     def run(self):
         while True:
-            if time.monotonic() >= self.next_collect:
+            event = None
+            try:
+                candidate = json.loads((STATE / 'panel-event.json').read_text())
+                if refresh_event(candidate) and candidate['seq'] != self.last_refresh:
+                    event = candidate
+            except (OSError, ValueError):
+                pass
+            manual = self.refresh_requested.is_set() or event is not None
+            if time.time() >= self.next_collect or manual:
                 try:
+                    self.refresh_requested.clear()
+                    if manual:
+                        self.weather.next_fetch = 0
                     self.collect()
-                    self.next_collect = time.monotonic() + CONFIG['refresh_seconds']
+                    self.next_collect = next_minute(time.time())
+                    if event:
+                        self.last_refresh = event['seq']
+                        atomic(STATE / 'refresh-consumed.json', encode({'seq': self.last_refresh}))
                 except Exception as exc:
                     atomic(STATE / 'collector-error.json', encode({'at': time.time(), 'error': str(exc)}))
                     if self.renderer:
@@ -197,6 +227,11 @@ def serve(port):
         raise RuntimeError('Initial panel render failed; inspect collector-error.json')
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
+            if urlparse(self.path).path == '/api/refresh':
+                if self.headers.get('X-Kindle-Desk') != 'refresh':
+                    self.send_error(403); return
+                desk.refresh_requested.set()
+                self.send_response(202); self.send_header('Content-Length', '0'); self.end_headers(); return
             if urlparse(self.path).path == '/api/device':
                 if self.headers.get('X-Kindle-Desk') != 'control':
                     self.send_error(403); return

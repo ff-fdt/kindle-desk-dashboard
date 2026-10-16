@@ -78,3 +78,5 @@ Weather: [Open-Meteo](https://open-meteo.com/), [CC BY 4.0](https://creativecomm
 Renderer/system helpers: [codecube/kindle-mcp-dashboard](https://github.com/codecube/kindle-mcp-dashboard), MIT, commit `aafc74f035597a1fca8ffd39ce1f4c554e8438c2`. Bluetooth: [Sighery/kindlebt](https://github.com/Sighery/kindlebt), MIT, commit `59e1d8e69a52e3cd58cee6fcc416d1774ad55791`; [rxi/log.c](https://github.com/rxi/log.c), MIT, commit `f9ea34994bd58ed342d2245cd4110bb5c6790153`.
 
 Project code uses the [MIT license](LICENSE). Third-party notices are in `vendor/`.
+
+The panel refreshes at the start of every minute. Tap **Refresh** for an immediate update.

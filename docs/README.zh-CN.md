@@ -39,3 +39,5 @@ Mac 读取本机 Codex 对话、天气和资源数据，渲染成灰度图，经
 ## 开源与来源
 
 项目采用 [MIT 许可证](../LICENSE)。天气来自 [Open-Meteo](https://open-meteo.com/)（CC BY 4.0）；图标来自 Tabler Icons。其他依赖与声明见 [Credits](../README.md#credits) 和 `vendor/`。
+
+看板每分钟整点自动刷新。点右下角「刷新」可立即获取最新内容。

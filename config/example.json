@@ -5,7 +5,7 @@
   "timezone": "Europe/London",
   "width": 1236,
   "height": 1648,
-  "refresh_seconds": 15,
+  "refresh_seconds": 60,
   "weather_refresh_seconds": 900,
   "codex_limit": 4,
   "language": "zh"
