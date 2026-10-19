@@ -10,18 +10,18 @@ An e-ink dashboard for Kindle and Mac. A large clock, weather, recent Codex ques
 
 ## Quick start
 
-Requires Python 3.10+.
+Requires macOS, Python 3.10+ and Xcode Command Line Tools.
 
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.lock
-.venv/bin/python -m playwright install chromium
+sh scripts/build-renderer.sh
 .venv/bin/python desk.py --port 8791
 ```
 
 Open **http://127.0.0.1:8791/panel/**.
 
-Copy `config/example.json` to `config/local.json` to configure the city, coordinates and timezone. `KINDLE_DESK_STATE_DIR` selects the runtime state directory; `KINDLE_DESK_CHROMIUM` selects a Chromium executable. The defaults use London weather. The panel updates at the start of each minute; weather is fetched every 15 minutes and on manual refresh.
+Copy `config/example.json` to `config/local.json` to configure the city, coordinates and timezone. `KINDLE_DESK_STATE_DIR` selects the runtime state directory. The defaults use London weather. The panel updates at the start of each minute; weather is fetched every 15 minutes and on manual refresh.
 
 The device setup uses a jailbroken Paperwhite 5 Signature Edition, firmware 5.18.3, and an Apple Silicon Mac. Build and pairing instructions are in [Setup](docs/SETUP.md).
 
@@ -54,9 +54,10 @@ The preview runs on `127.0.0.1`. Pairing keys are provisioned over USB. See [Pro
 
 | Path | Purpose |
 | --- | --- |
-| `panel/` | Shared HTML/CSS/JS interface |
+| `panel/` | Browser preview interface |
 | `desk.py`, `conversations.py` | Data collectors and local API |
-| `panel_render.py`, `mac_metrics.py` | Grayscale rendering and Mac resources |
+| `mac/PanelRenderer.swift`, `panel_render.py` | Native grayscale rendering |
+| `mac_metrics.py` | Mac resources |
 | `mac/` | Bluetooth peripheral and maintenance UI |
 | `kindle/` | BLE client, GTK viewer and lifecycle scripts |
 | `scripts/` | Build, launch and packaging tools |

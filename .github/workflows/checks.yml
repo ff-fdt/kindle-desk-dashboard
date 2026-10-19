@@ -17,3 +17,13 @@ jobs:
       - run: python -m pytest -q
       - run: node --check panel/panel.js
       - run: for script in kindle/*.sh scripts/*.sh; do sh -n "$script"; done
+  native-renderer:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.lock pytest
+      - run: sh scripts/build-renderer.sh
+      - run: python -m pytest -q tests/test_native_panel.py tests/test_renderer_lifecycle.py

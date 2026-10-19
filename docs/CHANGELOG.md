@@ -1,5 +1,10 @@
 # Version history
 
+## v0.2.7
+- Native drawing reduces Mac memory use during and between dashboard updates.
+- Large conversation histories use a bounded memory cache.
+- Stopping the dashboard also closes its drawing processes.
+
 ## v0.2.6
 - Automatic updates at the start of every minute.
 - A Refresh button fetches current conversations, metrics and weather.

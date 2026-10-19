@@ -1,6 +1,7 @@
 #!/bin/sh
 set -eu
 cd "$(dirname "$0")/.."
+sh scripts/build-renderer.sh
 APP="$PWD/build/Kindle Desk Bluetooth.app"
 mkdir -p "$APP/Contents/MacOS"
 cp mac/Info.plist "$APP/Contents/Info.plist"

@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import re
 import secrets
+import signal
 import sqlite3
 import sys
 import threading
@@ -152,6 +153,7 @@ class Desk:
         self.current = None
         self.renderer = None
         self.ready = threading.Event()
+        self.stopped = threading.Event()
         self.next_collect = 0
         self.refresh_requested = threading.Event()
         try:
@@ -172,6 +174,8 @@ class Desk:
         else:
             state = dict(self.last_state)
         restore = {'language': CONFIG.get('language', 'zh')}
+        if self.stopped.is_set():
+            raise RuntimeError('Collector stopped')
         png, ui = self.renderer.render(state, restore=restore)
         validate_frame(png)
         state['panel_ui'] = ui
@@ -188,8 +192,13 @@ class Desk:
         self.ready.set()
         return state
 
+    def stop(self):
+        self.stopped.set()
+        if self.renderer:
+            self.renderer.close()
+
     def run(self):
-        while True:
+        while not self.stopped.is_set():
             event = None
             try:
                 candidate = json.loads((STATE / 'panel-event.json').read_text())
@@ -209,22 +218,35 @@ class Desk:
                         self.last_refresh = event['seq']
                         atomic(STATE / 'refresh-consumed.json', encode({'seq': self.last_refresh}))
                 except Exception as exc:
+                    if self.stopped.is_set():
+                        break
                     atomic(STATE / 'collector-error.json', encode({'at': time.time(), 'error': str(exc)}))
                     if self.renderer:
                         try: self.renderer.close()
                         except Exception: pass
                     self.renderer = None
-                    time.sleep(5)
-            time.sleep(.5)
+                    self.stopped.wait(5)
+            self.stopped.wait(.5)
 
 
 def serve(port):
     desk = Desk()
     if not (STATE / 'command.json').exists():
         atomic(STATE / 'command.json', encode(device_request({'action': 'status'})))
-    threading.Thread(target=desk.run, daemon=True).start()
-    if not desk.ready.wait(60):
-        raise RuntimeError('Initial panel render failed; inspect collector-error.json')
+    worker = threading.Thread(target=desk.run, daemon=True)
+    worker.start()
+    try:
+        if not desk.ready.wait(60):
+            raise RuntimeError('Initial panel render failed; inspect collector-error.json')
+        serve_ready(port, desk)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        desk.stop()
+        worker.join(timeout=5)
+
+
+def serve_ready(port, desk):
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
             if urlparse(self.path).path == '/api/refresh':
@@ -317,9 +339,14 @@ def serve(port):
     try:
         server.serve_forever()
     except KeyboardInterrupt:
+        pass
+    finally:
         server.server_close()
 
 if __name__ == '__main__':
+    def terminate(signum, frame):
+        raise KeyboardInterrupt
+    signal.signal(signal.SIGTERM, terminate)
     parser = argparse.ArgumentParser()
     parser.add_argument('--once', action='store_true')
     parser.add_argument('--port', type=int, default=8791)

@@ -2,7 +2,7 @@
 
 ## Mac preview
 
-Follow the README virtual environment steps. Python 3.10+, Pillow, psutil, Playwright and Chromium are required. Use the committed lock file. `KINDLE_DESK_STATE_DIR` selects a persistent runtime directory. `KINDLE_DESK_CHROMIUM` pins an installed browser executable; otherwise the renderer checks macOS Playwright caches before using the Playwright-managed browser.
+Follow the README steps to install Pillow and psutil and build the native renderer. Python 3.10+ and macOS Command Line Tools are required. `KINDLE_DESK_STATE_DIR` selects a persistent runtime directory. Each update draws the dashboard with CoreText and AppKit, saves a grayscale PNG and releases the drawing process.
 
 The renderer uses macOS system fonts including CJK fallbacks. The current resource collector targets macOS APFS `/System/Volumes/Data`.
 

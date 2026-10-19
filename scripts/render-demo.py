@@ -17,7 +17,7 @@ output.mkdir(exist_ok=True)
 renderer = PanelRenderer(BASE)
 try:
     for language in ('zh', 'en'):
-        png, _ = renderer.render(state, {'page': 0, 'selected': None, 'detailPage': 0, 'language': language})
+        png, _ = renderer.render(state, {'language': language})
         (output / f'panel-{language}.png').write_bytes(png)
         print(output / f'panel-{language}.png')
 finally:

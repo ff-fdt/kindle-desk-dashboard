@@ -40,7 +40,7 @@ function paintHeader(){
  $('memory-bar').value=m.memory_percent||0;$('disk-bar').value=m.disk_percent||0;
  const canvas=$('cpu-chart'),ctx=canvas.getContext('2d'),h=m.cpu_history||[];ctx.clearRect(0,0,254,105);ctx.fillStyle='#252525';
  const gap=8,bar=3,start=254-h.length*gap;h.slice(-32).forEach((v,i)=>ctx.fillRect(start+i*gap,105-Math.max(2,v*1.0),bar,Math.max(2,v*1.0)));
- $('cpu-caption').textContent=h.length>1?(ui.language==='en'?'Last ':'最近 ')+Math.max(1,Math.round(h.length*15/60))+(ui.language==='en'?' min':' 分钟'):t('sampling');
+ $('cpu-caption').textContent=h.length>1?(ui.language==='en'?'Last ':'最近 ')+Math.max(1,h.length)+(ui.language==='en'?' min':' 分钟'):t('sampling');
  const k=state.kindle||{},valid=Number.isFinite(k.battery_percent),stale= !k.observed_at || Date.now()/1000-k.observed_at>180;
  $('battery-value').textContent=valid?`${k.battery_percent}%`:'—';
  $('battery-icon').src='assets/'+(k.charging?'battery-charging':valid?'battery-'+Math.max(1,Math.ceil(k.battery_percent/25)):'battery')+'.svg';

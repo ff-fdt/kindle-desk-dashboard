@@ -42,3 +42,65 @@ def test_aborted_turn_not_mislabeled_completed_and_steering_preserved(tmp_path):
     reader=RolloutReader(p);assert reader.read()['items'][0]['question']=='原问题\n\n补充要求'
     with p.open('a') as f:f.write(record('task_aborted',turn_id='a'))
     assert reader.read()['items']==[]
+
+
+def test_large_tool_record_uses_bounded_memory_and_preserves_next_turn(tmp_path):
+    import tracemalloc
+    p = tmp_path/'large.jsonl'
+    with p.open('wb') as f:
+        f.write(b'{"type":"response_item","payload":{"image":"')
+        for _ in range(256):
+            f.write(b'a' * 65536)
+        f.write(b'"}}\n')
+        f.write(message('UserMessage', '最新问题', 'latest').encode())
+    tracemalloc.start()
+    result = RolloutReader(p).read()
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    assert result['items'][0]['question'] == '最新问题'
+    assert peak < 1024 * 1024
+
+
+def test_large_partial_record_resumes_at_its_boundary(tmp_path):
+    p = tmp_path/'partial.jsonl'
+    p.write_bytes(b'{"type":"response_item","payload":"' + b'a' * 100000)
+    reader = RolloutReader(p)
+    assert not reader.read()['items']
+    assert reader.offset == 0
+    with p.open('ab') as f:
+        f.write(b'"}\n' + message('UserMessage', 'next', 'b').encode())
+    assert reader.read()['items'][0]['question'] == 'next'
+    assert reader.offset == p.stat().st_size
+
+
+def test_turns_and_steering_text_stay_bounded(tmp_path):
+    from conversations import MAX_TEXT, MAX_TURNS
+    p = tmp_path/'turns.jsonl'
+    with p.open('w') as f:
+        for n in range(50):
+            f.write(message('UserMessage', str(n) + 'x' * MAX_TEXT, str(n)))
+            f.write(message('UserMessage', 'steering' * MAX_TEXT, str(n)))
+    reader = RolloutReader(p)
+    result = reader.read()
+    assert len(reader.turns) == MAX_TURNS
+    assert result['items'][-1]['turn_id'] == '49'
+    assert all(len(t['question']) <= MAX_TEXT for t in reader.turns.values())
+    assert all(sum(map(len, t['questions'])) <= MAX_TEXT for t in reader.turns.values())
+
+
+def test_collector_evicts_archived_conversations(tmp_path):
+    import sqlite3
+    from conversations import CodexCollector
+    db = tmp_path/'state.sqlite'
+    log = tmp_path/'log'
+    log.write_text(message('UserMessage', 'visible', 'a'))
+    with sqlite3.connect(db) as c:
+        c.execute('CREATE TABLE threads (id, title, rollout_path, source, archived, updated_at)')
+        c.execute('INSERT INTO threads VALUES (?, ?, ?, ?, ?, ?)', ('a', 'demo', str(log), 'cli', 0, 1))
+    collector = CodexCollector(db)
+    assert collector.snapshot()['items']
+    assert len(collector.cache) == 1
+    with sqlite3.connect(db) as c:
+        c.execute('UPDATE threads SET archived=1')
+    assert collector.snapshot()['items'] == []
+    assert collector.cache == {}

@@ -6,6 +6,11 @@ from pathlib import Path
 import re
 import sqlite3
 
+MAX_TEXT = 8192
+MAX_RECORD = 4 * 1024 * 1024
+READ_CHUNK = 64 * 1024
+MAX_TURNS = 4
+
 
 def timestamp(event, payload):
     value = payload.get('completed_at') or payload.get('started_at')
@@ -18,7 +23,7 @@ def timestamp(event, payload):
 
 
 def plain(text):
-    text = str(text or '')
+    text = str(text or '')[:MAX_TEXT]
     text = re.sub(r'<oai-mem-citation>.*?</oai-mem-citation>', '', text, flags=re.S)
     text = re.sub(r'!?\[([^\]]*)\]\([^)]*\)', r'\1', text)
     text = re.sub(r'^\s{0,3}#{1,6}\s+', '', text, flags=re.M)
@@ -66,6 +71,8 @@ class RolloutReader:
         if key not in self.turns:
             self.turns[key] = {'turn_id': key, 'question': '', 'reply': '', 'at': at,
                                'updated_at': at, 'status': 'running'}
+        while len(self.turns) > MAX_TURNS:
+            del self.turns[next(iter(self.turns))]
         return self.turns[key]
 
     def consume(self, event):
@@ -96,8 +103,11 @@ class RolloutReader:
             if typ == 'UserMessage':
                 value = question_text(text)
                 if value and value not in turn.get('questions', []):
-                    turn.setdefault('questions', []).append(value)
-                    turn['question'] = '\n\n'.join(turn['questions'])
+                    questions = turn.setdefault('questions', [])
+                    remaining = MAX_TEXT - len(turn['question']) - (2 if questions else 0)
+                    if remaining > 0:
+                        questions.append(value[:remaining])
+                        turn['question'] = '\n\n'.join(questions)
             else:
                 value = plain(text)
                 if value:
@@ -119,11 +129,28 @@ class RolloutReader:
         with self.path.open('rb') as stream:
             stream.seek(self.offset)
             while True:
-                line = stream.readline()
-                if not line or not line.endswith(b'\n'):
-                    break  # A writer can still be appending the last JSON record.
+                # Inspect the header before reading image/tool payloads. Chunked
+                # skipping also bounds memory for a partially written huge record.
+                line = stream.readline(512)
+                if not line:
+                    break
+                wanted = b'"event_msg"' in line[:160]
+                complete = line.endswith(b'\n')
+                while not complete:
+                    chunk = stream.readline(READ_CHUNK)
+                    if not chunk:
+                        break
+                    complete = chunk.endswith(b'\n')
+                    if wanted:
+                        if len(line) + len(chunk) <= MAX_RECORD:
+                            line += chunk
+                        else:
+                            wanted = False
+                            line = b''
+                if not complete:
+                    break  # Retry this record after the writer finishes it.
                 self.offset = stream.tell()
-                if b'"event_msg"' not in line[:160]:
+                if not wanted:
                     continue
                 if not any(word in line for word in (b'"task_started"', b'"task_complete"', b'"task_aborted"', b'"turn_aborted"', b'"UserMessage"', b'"AgentMessage"', b'"user_message"', b'"agent_message"')):
                     continue
@@ -133,9 +160,6 @@ class RolloutReader:
                         self.consume(event)
                 except (ValueError, UnicodeDecodeError, TypeError):
                     continue
-        # Keep enough recent turns for a useful local history without retaining tool data.
-        if len(self.turns) > 24:
-            self.turns = dict(list(self.turns.items())[-24:])
         items = [dict(t) for t in self.turns.values() if t['question'] and t['status'] in ('running', 'completed')]
         return {'latest': self.latest, 'completed': self.completed, 'items': items}
 
@@ -160,6 +184,8 @@ class CodexCollector:
                                           'WHERE archived=0 ORDER BY updated_at DESC LIMIT 60').fetchall()
             finally:
                 connection.close()
+            active_paths = {row[2] for row in rows}
+            self.cache = {path: reader for path, reader in self.cache.items() if path in active_paths}
             items = []
             for thread_id, title, file, source in rows:
                 try:

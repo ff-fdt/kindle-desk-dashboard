@@ -15,7 +15,7 @@
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.lock
-.venv/bin/python -m playwright install chromium
+sh scripts/build-renderer.sh
 .venv/bin/python desk.py --port 8791
 ```
 
