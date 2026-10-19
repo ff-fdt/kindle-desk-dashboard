@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import re
 import sqlite3
+from math_text import protect_math
 
 MAX_TEXT = 8192
 MAX_RECORD = 4 * 1024 * 1024
@@ -25,12 +26,17 @@ def timestamp(event, payload):
 def plain(text):
     text = str(text or '')[:MAX_TEXT]
     text = re.sub(r'<oai-mem-citation>.*?</oai-mem-citation>', '', text, flags=re.S)
+    return protect_math(text, clean_prose).strip()
+
+
+def clean_prose(text):
+    text = re.sub(r'<oai-mem-citation>.*?</oai-mem-citation>', '', text, flags=re.S)
     text = re.sub(r'!?\[([^\]]*)\]\([^)]*\)', r'\1', text)
     text = re.sub(r'^\s{0,3}#{1,6}\s+', '', text, flags=re.M)
     text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
     text = re.sub(r'`{1,3}', '', text)
     text = re.sub(r'\n{3,}', '\n\n', text)
-    return text.strip()
+    return text
 
 
 def question_text(text):

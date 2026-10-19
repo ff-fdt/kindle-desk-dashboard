@@ -5,3 +5,5 @@
 html[lang=en] .conditions{gap:12px}html[lang=en] .conditions span{font-size:20px}html[lang=en] .date{font-size:26px;letter-spacing:0}html[lang=en] #counts{font-size:20px}
 
 #refresh{position:absolute;left:934px;top:1518px;width:254px;height:58px;border:1px solid #888;border-radius:5px;background:#fff;color:#222;font:500 22px var(--font);cursor:pointer}#refresh:active{background:#ddd}#panel{position:relative}
+
+.inline-math .katex{font-size:1.06em}.display-math{display:block;white-space:normal}.display-math .katex-display{margin:.18em 0}.display-math .katex{font-size:1.06em}.reply.has-math{display:block}.question-text.has-math{display:block;max-height:101px}.inline-math,.display-math{overflow-wrap:normal}

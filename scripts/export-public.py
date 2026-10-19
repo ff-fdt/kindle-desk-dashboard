@@ -14,7 +14,7 @@ import tarfile
 
 BASE = Path(__file__).resolve().parents[1]
 ROOTS = {'.gitignore', 'LICENSE', 'README.md', 'config', 'conversations.py',
-         'desk.py', 'mac_metrics.py', 'panel_render.py', 'requirements.txt',
+         'desk.py', 'math_text.py', 'mac_metrics.py', 'panel_render.py', 'requirements.txt',
          'requirements.lock', 'panel', 'kindle', 'mac', 'scripts', 'tests',
          'vendor', 'docs', 'examples', '.github'}
 

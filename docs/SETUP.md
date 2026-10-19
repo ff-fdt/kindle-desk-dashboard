@@ -2,7 +2,7 @@
 
 ## Mac preview
 
-Follow the README steps to install Pillow and psutil and build the native renderer. Python 3.10+ and macOS Command Line Tools are required. `KINDLE_DESK_STATE_DIR` selects a persistent runtime directory. Each update draws the dashboard with CoreText and AppKit, saves a grayscale PNG and releases the drawing process.
+Follow the README steps to install Pillow and psutil and build the native renderer. Python 3.10+ and macOS Command Line Tools are required. The first renderer build downloads the pinned SwiftMath dependency and bundles its fonts beside the executable. `KINDLE_DESK_STATE_DIR` selects a persistent runtime directory. Each update draws the dashboard with CoreText and AppKit, saves a grayscale PNG and releases the drawing process.
 
 The renderer uses macOS system fonts including CJK fallbacks. The current resource collector targets macOS APFS `/System/Volumes/Data`.
 
@@ -64,3 +64,7 @@ The display is an ordinary GTK/X11 window. A top-edge swipe of at least 120 px o
 Run `enable-autostart.sh` to enable startup. It checks the installed job and an existing displayed frame before creating `/var/local/kindle-desk/enabled`. The boot job waits for `framework_ready`, delays bootstrap and has no respawn loop. Restart through the Kindle system menu.
 
 To disable the dashboard and return to native mode, run `/bin/sh /mnt/us/kindle-desk/restore-reader.sh` as root. It removes the enable marker and disables the job without forcing a reboot.
+
+## Keep the dashboard awake
+
+Create `/var/local/kindle-desk/keep-awake` on the Kindle and restart the `kindle-desk` job to turn off idle sleep. The power button and cover still put the device to sleep. Opening it restores the dashboard and the keep-awake setting. Remove the file and restart the job to restore idle sleep.

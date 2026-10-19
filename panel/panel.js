@@ -47,13 +47,52 @@ function paintHeader(){
  $('battery-detail').textContent=valid?(stale?`${t('lastReading')} ${time(k.observed_at)}`:k.charging?t('charging'):t('onBattery')):t('waitingKindle');
  $('updated').textContent=t('updated')+' '+time(state.generated_at);
 }
+function mathContent(item, field){
+ const runs=item[field+'_runs'];
+ if(!runs) return esc(item[field]||'');
+ return runs.map(run=>{
+  if(run.kind!=='math') return esc(run.text);
+  try{return `<span class="${run.display?'display-math':'inline-math'}">${katex.renderToString(run.text,{displayMode:!!run.display,throwOnError:true,trust:false,maxExpand:500,maxSize:20,output:'html'})}</span>`;}
+  catch{return esc(run.source||run.text);}
+ }).join('');
+}
+function scaleMath(node){
+ for(const formula of node.querySelectorAll('.inline-math,.display-math')){
+  const widths=[...formula.querySelectorAll('.base')].map(n=>n.getBoundingClientRect().width);
+  const width=Math.max(0,...widths), available=node.getBoundingClientRect().width;
+  if(width>available && available>0) formula.style.fontSize=(available/width*100)+'%';
+ }
+}
+function fitMath(node){
+ const bottom=node.getBoundingClientRect().bottom;
+ let cut=false;
+ for(const child of [...node.childNodes]){
+  if(cut){child.remove();continue;}
+  if(child.nodeType===Node.ELEMENT_NODE){
+   if(child.getBoundingClientRect().bottom>bottom+.5){child.remove();cut=true;}
+  }else if(child.nodeType===Node.TEXT_NODE){
+   const range=document.createRange();range.selectNodeContents(child);
+   if([...range.getClientRects()].some(r=>r.bottom>bottom+.5)){
+    const chars=Array.from(child.textContent);let lo=0,hi=chars.length;
+    while(lo<hi){const mid=Math.ceil((lo+hi)/2);range.setEnd(child,chars.slice(0,mid).join('').length);
+     if([...range.getClientRects()].every(r=>r.bottom<=bottom+.5))lo=mid;else hi=mid-1;}
+    child.textContent=chars.slice(0,Math.max(0,lo-2)).join('').trimEnd()+'…';cut=true;
+   }
+  }
+ }
+}
 function paintFeed(){
  const items=[...(state.codex?.items||[])].sort((a,b)=>(b.updated_at||b.at)-(a.updated_at||a.at)).slice(0,3);
  const running=items.filter(item=>item.status==='running').length;
  $('counts').textContent=items.length?`${running} ${t('running')} · ${items.length-running} ${t('completed')}`:'';
- $('conversations').innerHTML=items.map(item=>`<article class="turn"><div class="turn-meta"><time>${time(item.at)}</time>${status(item)}</div><div class="question"><div class="question-text">${esc(item.question)}</div></div><div class="reply-label">Codex${item.status==='completed'?' · '+time(item.updated_at||item.at):''}</div><div class="reply">${esc(item.reply||t('waiting'))}</div></article>`).join('') || `<div class="empty"><h2>${state.codex?.available?t('empty'):t('unavailable')}</h2><p>${state.codex?.available?t('emptyCopy'):t('unavailableCopy')}</p></div>`;
+ $('conversations').innerHTML=items.map(item=>`<article class="turn"><div class="turn-meta"><time>${time(item.at)}</time>${status(item)}</div><div class="question"><div class="question-text">${mathContent(item,"question")}</div></div><div class="reply-label">Codex${item.status==='completed'?' · '+time(item.updated_at||item.at):''}</div><div class="reply">${item.reply?mathContent(item,"reply"):esc(t("waiting"))}</div></article>`).join('') || `<div class="empty"><h2>${state.codex?.available?t('empty'):t('unavailable')}</h2><p>${state.codex?.available?t('emptyCopy'):t('unavailableCopy')}</p></div>`;
+ document.querySelectorAll('.question-text,.reply').forEach(scaleMath);
+ document.querySelectorAll('.question-text').forEach(node=>{if(node.querySelector('.inline-math,.display-math')){node.classList.add('has-math');fitMath(node);}});
  document.querySelectorAll('.reply').forEach(node=>{
   const height=node.clientHeight, line=parseFloat(getComputedStyle(node).lineHeight);
+  if(node.querySelector('.inline-math,.display-math')){
+   node.classList.add('has-math');node.style.flex='0 0 auto';node.style.height=height+'px';fitMath(node);return;
+  }
   const lines=Math.max(1,Math.floor(height/line));
   node.style.webkitLineClamp=String(lines);
   node.style.flex='0 0 auto';

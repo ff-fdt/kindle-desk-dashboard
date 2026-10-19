@@ -1,0 +1,95 @@
+{
+  "schema": 2,
+  "timezone": "Europe/London",
+  "generated_at": 1792147200,
+  "weather": {
+    "available": true,
+    "stale": false,
+    "city": "London",
+    "code": 2,
+    "description": "局部多云",
+    "temperature": 16,
+    "low": 10,
+    "high": 17,
+    "rain_percent": 20
+  },
+  "mac": {
+    "name": "MacBook Pro",
+    "chip": "Apple Silicon",
+    "cpu_percent": 18,
+    "cpu_history": [
+      12,
+      18,
+      29,
+      22,
+      15,
+      10,
+      8,
+      11,
+      16,
+      23,
+      19,
+      14,
+      12,
+      9,
+      7,
+      8,
+      14,
+      22,
+      30,
+      24,
+      17,
+      12,
+      8,
+      6,
+      7,
+      10,
+      13,
+      18,
+      24,
+      21,
+      16,
+      18
+    ],
+    "memory_percent": 42,
+    "memory_used_gb": 13.4,
+    "memory_total_gb": 32,
+    "disk_percent": 38,
+    "disk_used_gb": 380,
+    "disk_total_gb": 1000
+  },
+  "kindle": {
+    "battery_percent": 86,
+    "charging": false,
+    "observed_at": 1792147200
+  },
+  "codex": {
+    "available": true,
+    "items": [
+      {
+        "id": "demo-1",
+        "status": "running",
+        "at": 1792146900,
+        "updated_at": 1792147200,
+        "question": "怎样计算 $E=mc^2$ 和 $\\Delta E$？",
+        "reply": "质量与能量满足 $E=mc^2$，其中 $c=3\\times10^8\\,\\mathrm{m/s}$。\n\\[\\frac{\\partial E}{\\partial x}=\\sum_{i=1}^{N}\\frac{\\hbar^2 k_i^2}{2m}\\]"
+      },
+      {
+        "id": "demo-2",
+        "status": "completed",
+        "at": 1792145700,
+        "updated_at": 1792146000,
+        "question": "求矩阵 $A$ 的特征值。",
+        "reply": "\\[A=\\begin{pmatrix}1 & 2\\\\3 & 4\\end{pmatrix},\\quad \\lambda_{\\pm}=\\frac{5\\pm\\sqrt{33}}{2}\\]\n结果满足 $\\lambda_+ + \\lambda_- = \\operatorname{tr}(A)=5$。"
+      },
+      {
+        "id": "demo-3",
+        "status": "completed",
+        "at": 1792143900,
+        "updated_at": 1792144500,
+        "question": "这个积分如何计算？",
+        "reply": "高斯积分可以写为：\n$$\\int_{-\\infty}^{\\infty}e^{-x^2}\\,dx=\\sqrt{\\pi}$$\n数值约为 $1.77245$，单位按模型定义。"
+      }
+    ]
+  }
+}

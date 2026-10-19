@@ -37,7 +37,9 @@ trap cleanup EXIT
 trap 'exit 0' INT TERM
 (until sh ./ui-mode.sh dashboard; do sleep 3; done) &
 display_pid=$!
-lipc-set-prop com.lab126.powerd preventScreenSaver 0 || true
+keep_awake=0
+[ ! -f /var/local/kindle-desk/keep-awake ] || keep_awake=1
+lipc-set-prop com.lab126.powerd preventScreenSaver "$keep_awake" || true
 sh ./control.sh &
 control_pid=$!
 awake=1
@@ -47,6 +49,7 @@ while [ -f /var/local/kindle-desk/enabled ] || [ -f /tmp/kindle-desk-manual ]; d
   case "$power_state" in
     active)
       if [ "$awake" -eq 0 ]; then
+        lipc-set-prop com.lab126.powerd preventScreenSaver "$keep_awake" || true
         viewer_signal CONT
         if [ ! -e native-settings ]; then sh ./ui-mode.sh dashboard || true; fi
         awake=1
@@ -55,6 +58,7 @@ while [ -f /var/local/kindle-desk/enabled ] || [ -f /tmp/kindle-desk-manual ]; d
       ;;
     screenSaver|readyToSuspend|suspended|screenOff)
       if [ "$awake" -eq 1 ]; then
+        lipc-set-prop com.lab126.powerd preventScreenSaver 0 || true
         viewer_signal STOP
         stop_client
         awake=0

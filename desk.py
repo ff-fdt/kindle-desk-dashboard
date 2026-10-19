@@ -26,6 +26,7 @@ BASE = Path(__file__).resolve().parent
 import psutil
 from PIL import Image
 from panel_render import PanelRenderer
+from math_text import prepare_state
 from mac_metrics import MacMetrics
 
 STATE = Path(os.environ.get('KINDLE_DESK_STATE_DIR', str(BASE / 'state')))
@@ -170,6 +171,7 @@ class Desk:
             state = {'schema': 2, 'generated_at': int(time.time()), 'timezone': CONFIG['timezone'],
                      'weather': self.weather.snapshot(), 'codex': self.codex.snapshot(3),
                      'mac': self.metrics.snapshot(), 'kindle': self.metrics.kindle()}
+            state = prepare_state(state)
             self.last_state = state
         else:
             state = dict(self.last_state)
@@ -248,6 +250,7 @@ def serve(port):
 
 def serve_ready(port, desk):
     class Handler(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.1"
         def do_POST(self):
             if urlparse(self.path).path == '/api/refresh':
                 if self.headers.get('X-Kindle-Desk') != 'refresh':
@@ -300,7 +303,7 @@ def serve_ready(port, desk):
         def do_GET(self):
             route = urlparse(self.path).path
             if route in ('/', '/panel'):
-                self.send_response(302); self.send_header('Location', '/panel/'); self.end_headers(); return
+                self.send_response(302); self.send_header('Location', '/panel/'); self.send_header('Content-Length', '0'); self.end_headers(); return
             elif route.startswith('/panel/'):
                 import mimetypes
                 path = (BASE / 'panel' / (route[len('/panel/'):] or 'index.html')).resolve()
@@ -334,7 +337,9 @@ def serve_ready(port, desk):
             self.end_headers(); self.wfile.write(body)
         def log_message(self, *args):
             pass
-    server = ThreadingHTTPServer(('127.0.0.1', port), Handler)
+    class Server(ThreadingHTTPServer):
+        request_queue_size = 64
+    server = Server(('127.0.0.1', port), Handler)
     print(f'Kindle Desk: http://127.0.0.1:{port}', flush=True)
     try:
         server.serve_forever()

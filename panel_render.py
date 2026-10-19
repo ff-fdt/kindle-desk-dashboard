@@ -5,6 +5,7 @@ import os
 import signal
 import subprocess
 import threading
+from math_text import prepare_state
 
 
 class PanelRenderer:
@@ -33,7 +34,7 @@ class PanelRenderer:
             self._process = process
         try:
             output, error = process.communicate(
-                json.dumps({'state': state, 'ui': restore}).encode(), timeout=30)
+                json.dumps({'state': prepare_state(state), 'ui': restore}).encode(), timeout=30)
             if process.returncode:
                 raise RuntimeError('Frame rendering failed: ' + error.decode(errors='replace')[-1000:])
             return output, {'language': 'en' if (restore or {}).get('language') == 'en' else 'zh'}

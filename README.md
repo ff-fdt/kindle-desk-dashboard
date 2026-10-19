@@ -38,6 +38,7 @@ Each source package comes with its interface language configured. Follow [Setup]
 
 - Portrait 1236 × 1648 layout designed for e-ink.
 - Time, date and local weather.
+- LaTeX math in questions and replies, including fractions, matrices, sums and integrals.
 - Three latest Codex conversations on one page, with **In progress** and **Completed** states.
 - Automatic updates at the start of each minute and a manual Refresh button.
 - Power-button and cover sleep; the dashboard and Bluetooth connection resume on wake.
@@ -56,7 +57,7 @@ The preview runs on `127.0.0.1`. Pairing keys are provisioned over USB. See [Pro
 | --- | --- |
 | `panel/` | Browser preview interface |
 | `desk.py`, `conversations.py` | Data collectors and local API |
-| `mac/PanelRenderer.swift`, `panel_render.py` | Native grayscale rendering |
+| `mac/Renderer/main.swift`, `panel_render.py` | Native grayscale rendering |
 | `mac_metrics.py` | Mac resources |
 | `mac/` | Bluetooth peripheral and maintenance UI |
 | `kindle/` | BLE client, GTK viewer and lifecycle scripts |
@@ -65,6 +66,17 @@ The preview runs on `127.0.0.1`. Pairing keys are provisioned over USB. See [Pro
 | `docs/` | Setup, protocol and Chinese documentation |
 | `examples/` | Sample data for preview images |
 | `vendor/` | Upstream helpers and license notices |
+
+## Math notation
+
+Use `$…$` or `\(…\)` for inline math, and `$$…$$` or `\[…\]` for a separate equation. For example:
+
+```latex
+The energy is $E=mc^2$.
+\[\int_{-\infty}^{\infty}e^{-x^2}\,dx=\sqrt{\pi}\]
+```
+
+[Formula preview](docs/images/math-zh.png)
 
 ## Development
 
@@ -80,6 +92,8 @@ node --check panel/panel.js
 Weather: [Open-Meteo](https://open-meteo.com/), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Icons: [Tabler Icons](https://github.com/tabler/tabler-icons), MIT, version 3.34.1.
 
 Renderer/system helpers: [codecube/kindle-mcp-dashboard](https://github.com/codecube/kindle-mcp-dashboard), MIT, commit `aafc74f035597a1fca8ffd39ce1f4c554e8438c2`. Bluetooth: [Sighery/kindlebt](https://github.com/Sighery/kindlebt), MIT, commit `59e1d8e69a52e3cd58cee6fcc416d1774ad55791`; [rxi/log.c](https://github.com/rxi/log.c), MIT, commit `f9ea34994bd58ed342d2245cd4110bb5c6790153`.
+
+Math: [SwiftMath](https://github.com/mgriebling/SwiftMath), MIT, pinned in `mac/Package.resolved`; Latin Modern Math font, GUST Font License. Browser preview: [KaTeX](https://github.com/KaTeX/KaTeX), MIT, version 0.19.0, bundled for offline use.
 
 Project code uses the [MIT license](LICENSE). Third-party notices are in `vendor/`.
 

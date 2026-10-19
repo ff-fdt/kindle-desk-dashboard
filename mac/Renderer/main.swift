@@ -128,20 +128,19 @@ for (index,item) in items.enumerated() {
     icon(active ? "loader" : "check",badgeX+(active ? 12 : 0),top+(active ? 29.5 : 26.5),active ? 18 : 22,white:active)
     text(status,badgeX+(active ? 36 : 28),top+23,labelWidth+1,20,550,active ? .white : ink,leading:31)
     let question = string(item,"question")
-    // Measure with the same typesetter that draws the final question.
-    let qa = NSAttributedString(string:question,attributes:attrs(27,500,ink,0))
-    let qt = CTTypesetterCreateWithAttributedString(qa)
-    let first = CTTypesetterSuggestLineBreak(qt,0,788)
-    let questionLines = qa.length > first ? 2 : 1
-    let qY = top+67, qHeight = Double(questionLines)*40.5+22
+    let questionLayout = MathTextLayout(question,runs:item["question_runs"] as? [[String:Any]],
+        width:788,size:27,weight:500,maxHeight:101,maxLines:2,leading:40.5)
+    let qY = top+67, qHeight = max(40.5,questionLayout.height)+22
     rect(48,qY,818,qHeight,0.945,6)
-    text(question,63,qY+11,788,27,500,lines:2,leading:40.5)
+    questionLayout.draw(x:63,y:qY+11,width:788)
     let labelY = qY+qHeight+16
     text("Codex"+(active ? "" : " · "+date(number(item,"updated_at",number(item,"at")),"HH:mm")),48,labelY,818,20,400,muted,leading:26)
     let replyY = labelY+32, available = top+rowHeight-22-replyY
-    let lines = max(1,Int(floor(available/39.75)))
     let reply = string(item,"reply")
-    text(reply.isEmpty ? tr("等待回复…","Waiting for a reply…") : reply,48,replyY,818,25,400,lines:lines,leading:39.75)
+    let replyLayout = MathTextLayout(reply.isEmpty ? tr("等待回复…","Waiting for a reply…") : reply,
+        runs:reply.isEmpty ? nil : item["reply_runs"] as? [[String:Any]],width:818,size:25,
+        maxHeight:available,leading:39.75)
+    replyLayout.draw(x:48,y:replyY,width:818)
     if index < 2 { rule(48,top+rowHeight-1,818) }
 }
 if items.isEmpty {
@@ -194,4 +193,8 @@ let png = NSMutableData()
 let destination = CGImageDestinationCreateWithData(png,"public.png" as CFString,1,nil)!
 CGImageDestinationAddImage(destination,image,nil)
 guard CGImageDestinationFinalize(destination) else { exit(1) }
+if ProcessInfo.processInfo.environment["KINDLE_DESK_RENDER_STATS"] == "1" {
+    let report = "KINDLE_DESK_MATH_STATS {\"rendered\":\(mathRendered),\"fallback\":\(mathAttempts-mathRendered)}\n"
+    FileHandle.standardError.write(Data(report.utf8))
+}
 FileHandle.standardOutput.write(png as Data)
