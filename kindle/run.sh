@@ -39,17 +39,26 @@ trap 'exit 0' INT TERM
 display_pid=$!
 keep_awake=0
 [ ! -f /var/local/kindle-desk/keep-awake ] || keep_awake=1
-lipc-set-prop com.lab126.powerd preventScreenSaver "$keep_awake" || true
+lipc-set-prop com.lab126.powerd preventScreenSaver 0 || true
 sh ./control.sh &
 control_pid=$!
 awake=1
 client_pid=''
+idle_ticks=15
 while [ -f /var/local/kindle-desk/enabled ] || [ -f /tmp/kindle-desk-manual ]; do
   power_state=$(lipc-get-prop com.lab126.powerd state 2>/dev/null) || power_state=''
   case "$power_state" in
     active)
+      # Reset only the idle timer. A screensaver lock also blocks button/cover sleep.
+      if [ "$keep_awake" -eq 1 ]; then
+        idle_ticks=$((idle_ticks+1))
+        if [ "$idle_ticks" -ge 15 ]; then
+          lipc-set-prop -i com.lab126.powerd touchScreenSaverTimeout 1 || true
+          idle_ticks=0
+        fi
+      fi
       if [ "$awake" -eq 0 ]; then
-        lipc-set-prop com.lab126.powerd preventScreenSaver "$keep_awake" || true
+        lipc-set-prop com.lab126.powerd preventScreenSaver 0 || true
         viewer_signal CONT
         if [ ! -e native-settings ]; then sh ./ui-mode.sh dashboard || true; fi
         awake=1
@@ -62,6 +71,7 @@ while [ -f /var/local/kindle-desk/enabled ] || [ -f /tmp/kindle-desk-manual ]; d
         viewer_signal STOP
         stop_client
         awake=0
+        idle_ticks=15
         echo "Dashboard sleeping $(date)"
       fi
       ;;

@@ -178,7 +178,10 @@ resource(tr("内存","Memory"),number(mac,"memory_percent"),770,"\(fmt(number(ma
 resource(tr("磁盘","Storage"),number(mac,"disk_percent"),1000,"\(fmt(number(mac,"disk_used_gb"))) / \(fmt(number(mac,"disk_total_gb"))) GB")
 text(tr("Kindle 电量","Kindle battery"),934,1224,254,english ? 30 : 32,600,leading:44)
 let battery = (kindle["battery_percent"] as? NSNumber)?.doubleValue
-text(battery.map{fmt($0)+"%"} ?? "—",934,1284,184,76,600,leading:94,kern:-2)
+let batteryLabel = battery.map{fmt($0)+"%"} ?? "—"
+// Reserve space for the icon and fit the complete percentage, including 100%.
+let batteryFontSize = min(76, 76 * 180 / max(1, width(batteryLabel,76,600)))
+text(batteryLabel,934,1284,184,batteryFontSize,600,leading:94)
 let charging = flag(kindle,"charging")
 icon(charging ? "battery-charging" : battery.map{"battery-\(max(1,min(4,Int(ceil($0/25)))))"} ?? "battery",1126,1303,62)
 let observed = number(kindle,"observed_at")

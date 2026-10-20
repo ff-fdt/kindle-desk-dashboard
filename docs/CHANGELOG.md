@@ -1,5 +1,11 @@
 # Version history
 
+## v0.2.12
+- Keep the dashboard awake while idle and allow normal power-button and cover sleep.
+
+## v0.2.11
+- Show the complete Kindle battery percentage, including 100%, beside its icon.
+
 ## v0.2.10
 - Hide internal heartbeat messages from conversation cards.
 - Preserve CPU history across restarts and keep chart columns evenly spaced.
