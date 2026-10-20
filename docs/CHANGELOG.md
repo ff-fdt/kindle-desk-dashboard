@@ -1,5 +1,10 @@
 # Version history
 
+## v0.2.9
+- Four conversation cards per page, with one title line and up to three reply lines.
+- A compact right-aligned weather block beside the clock.
+- Aligned system metrics and simplified cards without repeated footer status.
+
 ## v0.2.8
 - LaTeX formulas in questions and replies: inline math, fractions, roots, matrices, sums and integrals.
 - Formula-aware spacing keeps complete formulas within each conversation card.

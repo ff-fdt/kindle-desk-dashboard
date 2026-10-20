@@ -72,5 +72,5 @@ def prepare_state(state):
     codex = state.get('codex', {})
     items = [{**item, 'question_runs': split_math(item.get('question', '')),
               'reply_runs': split_math(item.get('reply', ''))}
-             for item in codex.get('items', [])[:3]]
+             for item in codex.get('items', [])[:4]]
     return {**state, 'codex': {**codex, 'items': items}}

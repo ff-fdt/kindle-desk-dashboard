@@ -1,4 +1,4 @@
-// Portrait dashboard rasterizer. Coordinates match panel/panel.css and the device refresh hitbox.
+// Portrait dashboard rasterizer. Refresh coordinates match the device touch hitbox.
 import AppKit
 import CoreText
 import ImageIO
@@ -92,86 +92,115 @@ func weatherIcon(_ code: Int) -> String {
     return "cloud-rain"
 }
 let descriptions = [0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Overcast",45:"Fog",48:"Rime fog",51:"Light drizzle",53:"Drizzle",55:"Heavy drizzle",56:"Freezing drizzle",57:"Freezing drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",66:"Freezing rain",67:"Freezing rain",71:"Light snow",73:"Snow",75:"Heavy snow",77:"Snow grains",80:"Showers",81:"Showers",82:"Heavy showers",85:"Snow showers",86:"Snow showers",95:"Thunderstorm",96:"Thunderstorm",99:"Thunderstorm"]
+// Native portrait layout: 48 px outer margins, 818 px feed, 254 px sidebar.
+func outline(_ x: Double, _ y: Double, _ w: Double, _ h: Double, _ radius: Double, _ gray: Double = 0.76) {
+    NSColor(white:gray,alpha:1).setStroke()
+    let path = NSBezierPath(roundedRect:NSRect(x:x,y:y,width:w,height:h),xRadius:radius,yRadius:radius)
+    path.lineWidth = 1.5; path.stroke()
+}
 rect(0,0,1236,1648,1)
 let now = number(state,"generated_at",Date().timeIntervalSince1970)
-text(date(now,"HH:mm"),42,40,405,166,700,leading:154.38,kern:-9)
-text(date(now,english ? "EEEE, d MMMM" : "M月d日  EEEE"),48,213,402,english ? 26 : 29,500)
-rule(450,53,1,182,0.67); rule(832,53,1,182,0.67); rule(48,273,1140,1,0.67)
 let weather = object("weather"), mac = object("mac"), kindle = object("kindle")
+text(date(now,"HH:mm"),42,27,520,170,700,leading:170,kern:-8)
+text(date(now,english ? "EEEE, d MMMM" : "M月d日  EEEE"),48,205,650,english ? 30 : 34,500,leading:45)
 let city = string(weather,"city","London")
-text(city == "London" ? tr("伦敦","London") : city,485,55,315,27,500)
+let weatherRight = 1188.0
+text(city == "London" ? tr("伦敦","London") : city,748,44,440,28,500,align:"right")
 let code = Int(number(weather,"code",3))
-icon(weatherIcon(code),485,113,68)
 let temperature = flag(weather,"available") ? fmt(number(weather,"temperature"))+"°" : "—"
-text(temperature,567,111,110,67,600,leading:83,kern:-2)
-text(flag(weather,"available") ? (english ? descriptions[code] ?? "Unknown" : string(weather,"description")) : tr("天气暂不可用","Weather unavailable"), 678,130,149,english ? 20 : 25)
-let forecast = flag(weather,"available") ? "\(fmt(number(weather,"low")))° – \(fmt(number(weather,"high")))°　\(tr("降雨","Rain")) \(fmt(number(weather,"rain_percent")))%" + (flag(weather,"stale") ? tr(" · 缓存"," · cached") : "") : tr("等待天气更新","Waiting for weather")
-text(forecast,485,202,340,23)
-icon("device-laptop",865,83,61)
-text(string(mac,"name","Mac"),944,80,244,26,600,leading:36.4)
-text(string(mac,"chip","macOS"),944,125,244,21,400,muted)
-rule(900,304,1,1308,0.67); rule(48,367,818,1,0.6); rule(934,367,254,1,0.6)
-text("Codex",48,304,250,35,650)
-text(tr("系统状态","System"),934,304,254,29,600)
+let condition = flag(weather,"available") ? (english ? descriptions[code] ?? "Unknown" : string(weather,"description")) : tr("暂无天气","Unavailable")
+let conditionSize = english ? 23.0 : 26.0
+let conditionWidth = min(220,width(condition,conditionSize)+2)
+let temperatureWidth = width(temperature,78,600)+4
+let conditionX = weatherRight-conditionWidth
+let temperatureX = conditionX-18-temperatureWidth
+let weatherIconX = temperatureX-20-72
+icon(weatherIcon(code),weatherIconX,108,72)
+text(temperature,temperatureX,96,temperatureWidth,78,600,leading:96,kern:-2)
+text(condition,conditionX,126,conditionWidth,conditionSize,400,leading:36,align:"right")
+let forecast = flag(weather,"available") ? "\(fmt(number(weather,"low")))° – \(fmt(number(weather,"high")))°   \(tr("降雨","Rain")) \(fmt(number(weather,"rain_percent")))%" + (flag(weather,"stale") ? tr(" · 缓存"," · cached") : "") : tr("等待天气更新","Waiting for weather")
+text(forecast,748,205,440,25,400,leading:45,align:"right")
+rule(48,286,1140,1.5,0.65)
+rule(900,320,1,1292,0.69)
+text("Codex",48,324,250,42,650,leading:54)
+text(tr("系统状态","System"),934,324,254,34,600,leading:54)
+rule(934,408,254,1,0.69)
 let codex = object("codex")
-let items = Array((codex["items"] as? [[String: Any]] ?? []).sorted { number($0,"updated_at",number($0,"at")) > number($1,"updated_at",number($1,"at")) }.prefix(3))
+let items = Array((codex["items"] as? [[String: Any]] ?? []).sorted { number($0,"updated_at",number($0,"at")) > number($1,"updated_at",number($1,"at")) }.prefix(4))
 let running = items.filter{string($0,"status")=="running"}.count
-if !items.isEmpty { text("\(running) \(tr("进行中","in progress")) · \(items.count-running) \(tr("已完成","completed"))",400,313,466,english ? 20 : 21,400,ink,align:"right") }
-let rowHeight = (1612.0-368.0)/3
+if !items.isEmpty { text("\(running) \(tr("进行中","in progress")) · \(items.count-running) \(tr("已完成","completed"))",350,324,516,english ? 24 : 26,400,ink,leading:54,align:"right") }
+let cardHeight = 281.0, cardGap = 22.0
 for (index,item) in items.enumerated() {
-    let top = 368 + Double(index)*rowHeight, active = string(item,"status")=="running"
+    let top = 410 + Double(index)*(cardHeight+cardGap), active = string(item,"status")=="running"
+    outline(48.75,top+0.75,816.5,cardHeight-1.5,18)
+    text(date(number(item,"at"),"HH:mm"),80,top+20,200,23,400,muted,leading:36)
     let status = active ? tr("进行中","In progress") : tr("已完成","Completed")
-    text(date(number(item,"at"),"HH:mm"),48,top+23,200,21,400,muted,leading:31)
-    let labelWidth = width(status,20,550), badgeWidth = labelWidth + (active ? 48 : 28)
-    let badgeX = 866-badgeWidth
-    if active { rect(badgeX,top+23,badgeWidth,31,0.1,4) }
-    icon(active ? "loader" : "check",badgeX+(active ? 12 : 0),top+(active ? 29.5 : 26.5),active ? 18 : 22,white:active)
-    text(status,badgeX+(active ? 36 : 28),top+23,labelWidth+1,20,550,active ? .white : ink,leading:31)
+    let labelWidth = width(status,24,550), badgeWidth = labelWidth+68, badgeX = 834-badgeWidth
+    rect(badgeX,top+18,badgeWidth,42,active ? 0.10 : 0.91,16)
+    if active { rect(badgeX+18,top+33,12,12,1,6) }
+    else { icon("check",badgeX+14,top+25,28) }
+    text(status,badgeX+46,top+18,labelWidth+4,24,550,active ? .white : ink,leading:42)
     let question = string(item,"question")
-    let questionLayout = MathTextLayout(question,runs:item["question_runs"] as? [[String:Any]],
-        width:788,size:27,weight:500,maxHeight:101,maxLines:2,leading:40.5)
-    let qY = top+67, qHeight = max(40.5,questionLayout.height)+22
-    rect(48,qY,818,qHeight,0.945,6)
-    questionLayout.draw(x:63,y:qY+11,width:788)
-    let labelY = qY+qHeight+16
-    text("Codex"+(active ? "" : " · "+date(number(item,"updated_at",number(item,"at")),"HH:mm")),48,labelY,818,20,400,muted,leading:26)
-    let replyY = labelY+32, available = top+rowHeight-22-replyY
+    let questionRuns = item["question_runs"] as? [[String:Any]]
+    let questionLayout = MathTextLayout(question,runs:questionRuns,
+        width:754,size:30,weight:600,maxHeight:54,maxLines:1,leading:42)
+    let qY = top+70
+    questionLayout.draw(x:80,y:qY,width:754)
+    let replyY = top+128
     let reply = string(item,"reply")
     let replyLayout = MathTextLayout(reply.isEmpty ? tr("等待回复…","Waiting for a reply…") : reply,
-        runs:reply.isEmpty ? nil : item["reply_runs"] as? [[String:Any]],width:818,size:25,
-        maxHeight:available,leading:39.75)
-    replyLayout.draw(x:48,y:replyY,width:818)
-    if index < 2 { rule(48,top+rowHeight-1,818) }
+        runs:reply.isEmpty ? nil : item["reply_runs"] as? [[String:Any]],width:754,size:27,
+        maxHeight:top+cardHeight-24-replyY,maxLines:3,leading:40)
+    replyLayout.draw(x:80,y:replyY,width:754)
 }
 if items.isEmpty {
-    text(flag(codex,"available") ? tr("等待新的对话","Waiting for a conversation") : tr("Codex 暂不可用","Codex unavailable"),78,800,758,35,500,muted,lines:2)
+    text(flag(codex,"available") ? tr("等待新的对话","Waiting for a conversation") : tr("Codex 暂不可用","Codex unavailable"),80,700,754,35,500,muted,lines:2)
 }
 func resource(_ name: String, _ percentage: Double, _ y: Double, _ detail: String) {
-    text(name,934,y,180,27,600); text(fmt(percentage)+"%",1090,y+2,98,25,550,align:"right")
-    text(detail,934,y+50,254,22)
-    rect(934,y+96,254,12,0.87,2); rect(934,y+96,254*min(100,max(0,percentage))/100,12,0.13,2)
-    rule(934,y+147,254)
+    text(name,934,y,152,32,600,leading:42)
+    text(fmt(percentage)+"%",1092,y,96,28,550,leading:42,align:"right")
+    text(detail,934,y+65,254,25,400,leading:36)
+    rect(934,y+116,254,17,0.83); rect(934,y+116,254*min(100,max(0,percentage))/100,17,0.10)
+    rule(934,y+182,254,1,0.70)
 }
-text("CPU",934,398,160,27,600);text(fmt(number(mac,"cpu_percent"))+"%",1090,400,98,25,550,align:"right")
+text("CPU",934,450,152,32,600,leading:42)
+text(fmt(number(mac,"cpu_percent"))+"%",1092,450,96,28,550,leading:42,align:"right")
 let history = Array((mac["cpu_history"] as? [Double] ?? []).suffix(32))
+let step = 254.0/Double(max(1,history.count))
 for (index,value) in history.enumerated() {
-    let h = max(2,min(100,value));rect(1188-Double(history.count)*8+Double(index)*8,560-h,3,h,0.145)
+    let h = max(3,min(100,value)*1.2)
+    rect(934+Double(index)*step,640-h,min(4,max(3,step*0.44)),h,0.10)
 }
-text(history.count > 1 ? tr("最近 ","Last ")+String(history.count)+tr(" 分钟"," min") : tr("正在采样","Sampling"),934,571,254,18,400,muted)
-rule(934,628,254)
-resource(tr("内存","Memory"),number(mac,"memory_percent"),659,"\(fmt(number(mac,"memory_used_gb"),1)) / \(fmt(number(mac,"memory_total_gb"))) GB")
-resource(tr("磁盘","Storage"),number(mac,"disk_percent"),840,"\(fmt(number(mac,"disk_used_gb"))) / \(fmt(number(mac,"disk_total_gb"))) GB")
-text(tr("Kindle 电量","Kindle battery"),934,1060,254,27,600)
+text(history.count > 1 ? tr("最近 ","Last ")+String(history.count)+tr(" 分钟"," min") : tr("正在采样","Sampling"),934,658,254,24,400,muted,leading:34)
+rule(934,726,254,1,0.70)
+resource(tr("内存","Memory"),number(mac,"memory_percent"),770,"\(fmt(number(mac,"memory_used_gb"),1)) / \(fmt(number(mac,"memory_total_gb"))) GB")
+resource(tr("磁盘","Storage"),number(mac,"disk_percent"),1000,"\(fmt(number(mac,"disk_used_gb"))) / \(fmt(number(mac,"disk_total_gb"))) GB")
+text(tr("Kindle 电量","Kindle battery"),934,1224,254,english ? 30 : 32,600,leading:44)
 let battery = (kindle["battery_percent"] as? NSNumber)?.doubleValue
-text(battery.map{fmt($0)+"%"} ?? "—",934,1113,193,63,550,leading:81.9,kern:-2.5)
+text(battery.map{fmt($0)+"%"} ?? "—",934,1284,184,76,600,leading:94,kern:-2)
 let charging = flag(kindle,"charging")
-icon(charging ? "battery-charging" : battery.map{"battery-\(max(1,min(4,Int(ceil($0/25)))))"} ?? "battery",1121,1120,67)
+icon(charging ? "battery-charging" : battery.map{"battery-\(max(1,min(4,Int(ceil($0/25)))))"} ?? "battery",1126,1303,62)
 let observed = number(kindle,"observed_at")
 let batteryDetail = battery == nil ? tr("等待读取","Waiting for Kindle") : observed == 0 || Date().timeIntervalSince1970-observed > 180 ? tr("上次读数 ","Last reading ")+date(observed,"HH:mm") : charging ? tr("正在充电","Charging") : tr("电池供电","On battery")
-text(batteryDetail,934,1200,254,21,400,muted,lines:2,leading:33.6)
-NSColor(white:0.53,alpha:1).setStroke();let button = NSBezierPath(roundedRect:NSRect(x:934.5,y:1518.5,width:253,height:57),xRadius:5,yRadius:5);button.lineWidth=1;button.stroke()
-text(tr("刷新","Refresh"),934,1529,254,22,500,align:"center")
-text(tr("更新 ","Updated ")+date(now,"HH:mm"),934,1580,254,18,400,muted,leading:32.4)
+text(batteryDetail,934,1382,254,25,400,muted,lines:2,leading:34)
+// Preserve the device's existing refresh touch rectangle.
+outline(934.5,1518.5,253,57,7,0.53)
+let refreshTitle = tr("刷新","Refresh"), refreshWidth = width(refreshTitle,26,500)
+let refreshX = 934+(254-refreshWidth-44)/2
+ctx.saveGState()
+ctx.setStrokeColor(ink.cgColor); ctx.setFillColor(ink.cgColor); ctx.setLineWidth(2.4); ctx.setLineCap(.round)
+let cx = refreshX+14, cy = 1547.0
+for angle in [0.0,Double.pi] {
+    let start = angle+0.35, end = angle+2.65
+    ctx.addArc(center:CGPoint(x:cx,y:cy),radius:10,startAngle:start,endAngle:end,clockwise:false); ctx.strokePath()
+    let tip = CGPoint(x:cx+10*cos(end),y:cy+10*sin(end))
+    let tx = -sin(end), ty = cos(end), nx = cos(end), ny = sin(end)
+    ctx.move(to:tip); ctx.addLine(to:CGPoint(x:tip.x-tx*7+nx*4,y:tip.y-ty*7+ny*4))
+    ctx.addLine(to:CGPoint(x:tip.x-tx*7-nx*4,y:tip.y-ty*7-ny*4)); ctx.closePath(); ctx.fillPath()
+}
+ctx.restoreGState()
+text(refreshTitle,refreshX+44,1529,refreshWidth+2,26,500,leading:36)
+text(tr("更新 ","Updated ")+date(now,"HH:mm"),934,1580,254,21,400,muted,leading:32,align:"center")
 // Write 16 grayscale levels directly; no browser or second image-conversion process.
 let rgba = bitmap.bitmapData!
 var grayscale = Data(count:1236*1648)

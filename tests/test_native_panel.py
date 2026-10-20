@@ -15,6 +15,9 @@ pytestmark = pytest.mark.skipif(sys.platform != 'darwin' or not (BASE/'build/Kin
 @pytest.mark.parametrize('content', ['demo', 'long', 'empty'])
 def test_native_panel_contract(language, content):
     state = json.loads((BASE/'examples/demo-state.json').read_text())
+    fourth = dict(state['codex']['items'][-1])
+    fourth.update(id='demo-4', at=fourth['at']-60, updated_at=fourth['updated_at']-60)
+    state['codex']['items'].append(fourth)
     if content == 'long':
         for item in state['codex']['items']:
             item['question'] = '请核对今天的任务、天气与电量。' * 120
@@ -35,6 +38,9 @@ def test_native_panel_contract(language, content):
     with Image.open(io.BytesIO(png)) as image:
         assert image.size == (1236,1648) and image.mode == 'L'
         assert len(image.getcolors(256)) <= 16
+        if content != 'empty':
+            assert image.getpixel((300,1319)) < 230
+            assert image.crop((80,1339,834,1576)).getextrema()[0] < 100
         # The refresh button's native touch boundary stays in the same place.
         assert image.getpixel((1000,1518)) < 200
         assert image.getpixel((1000,1575)) < 200
@@ -64,5 +70,5 @@ def test_formula_rendering_and_invalid_formula_fallback(latex):
     with Image.open(io.BytesIO(png)) as image:
         assert image.size==(1236,1648)
         # Formula/fallback occupies the reply area, and leaves the inter-card margin clear.
-        assert image.crop((48,560,866,730)).getextrema()[0]<100
-        assert image.crop((48,765,866,777)).getextrema()==(255,255)
+        assert image.crop((80,540,834,666)).getextrema()[0]<100
+        assert image.crop((48,697,866,707)).getextrema()==(255,255)
