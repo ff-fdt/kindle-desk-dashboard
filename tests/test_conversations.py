@@ -104,3 +104,14 @@ def test_collector_evicts_archived_conversations(tmp_path):
         c.execute('UPDATE threads SET archived=1')
     assert collector.snapshot()['items'] == []
     assert collector.cache == {}
+
+
+def test_heartbeat_is_hidden_without_hiding_user_question(tmp_path):
+    p = tmp_path/'log'
+    p.write_text(message('UserMessage', '查看 heartbeat 日志', 'human') +
+                 record('task_complete', turn_id='human', last_agent_message='已查看') +
+                 message('UserMessage', '<heartbeat>\n<instructions>poll</instructions>\n</heartbeat>', 'timer') +
+                 record('task_complete', turn_id='timer', last_agent_message=''))
+    items = RolloutReader(p).read()['items']
+    assert [x['turn_id'] for x in items] == ['human']
+    assert question_text(' <heartbeat>## My request: hidden</heartbeat>') == ''

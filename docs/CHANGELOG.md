@@ -1,5 +1,11 @@
 # Version history
 
+## v0.2.10
+- Hide internal heartbeat messages from conversation cards.
+- Preserve CPU history across restarts and keep chart columns evenly spaced.
+- Refreshes update the current minute; missing minutes stay empty.
+- Sample CPU usage correctly on the collector thread.
+
 ## v0.2.9
 - Four conversation cards per page, with one title line and up to three reply lines.
 - A compact right-aligned weather block beside the clock.

@@ -165,11 +165,12 @@ func resource(_ name: String, _ percentage: Double, _ y: Double, _ detail: Strin
 }
 text("CPU",934,450,152,32,600,leading:42)
 text(fmt(number(mac,"cpu_percent"))+"%",1092,450,96,28,550,leading:42,align:"right")
-let history = Array((mac["cpu_history"] as? [Double] ?? []).suffix(32))
-let step = 254.0/Double(max(1,history.count))
+let history = Array((mac["cpu_history"] as? [Any] ?? []).suffix(32))
+let step = 8.0
 for (index,value) in history.enumerated() {
-    let h = max(3,min(100,value)*1.2)
-    rect(934+Double(index)*step,640-h,min(4,max(3,step*0.44)),h,0.10)
+    guard let sample = value as? NSNumber else { continue }
+    let h = max(3,min(100,sample.doubleValue)*1.2)
+    rect(1188-4-Double(history.count-1-index)*step,640-h,4,h,0.10)
 }
 text(history.count > 1 ? tr("最近 ","Last ")+String(history.count)+tr(" 分钟"," min") : tr("正在采样","Sampling"),934,658,254,24,400,muted,leading:34)
 rule(934,726,254,1,0.70)

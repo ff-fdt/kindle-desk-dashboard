@@ -40,6 +40,8 @@ def clean_prose(text):
 
 
 def question_text(text):
+    if re.match(r'^\s*<(?:heartbeat|automation_trigger)(?:\s|>)', text):
+        return ''
     if '## My request:' in text:
         text = text.split('## My request:', 1)[1]
     if '<send_user_message_question_reply>' in text:
@@ -210,6 +212,6 @@ class CodexCollector:
             return {'available': True, 'items': items,
                     'completed': [x for x in items if x['status'] == 'completed'],
                     'active': [x for x in items if x['status'] == 'running'],
-                    'meaning': '最近三条对话的问题、回复与状态。'}
+                    'meaning': '最近对话的问题、回复与状态。'}
         except (sqlite3.Error, OSError) as exc:
             return {**missing, 'error': type(exc).__name__}
