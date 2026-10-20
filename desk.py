@@ -169,7 +169,7 @@ class Desk:
             self.renderer = PanelRenderer(BASE)
         if fresh or self.last_state is None:
             state = {'schema': 2, 'generated_at': int(time.time()), 'timezone': CONFIG['timezone'],
-                     'weather': self.weather.snapshot(), 'codex': self.codex.snapshot(3),
+                     'weather': self.weather.snapshot(), 'codex': self.codex.snapshot(4),
                      'mac': self.metrics.snapshot(), 'kindle': self.metrics.kindle()}
             state = prepare_state(state)
             self.last_state = state
